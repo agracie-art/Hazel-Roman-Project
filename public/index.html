@@ -175,6 +175,18 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 /* JUMP is see-through so it never hides the game, and firms up while pressed */
 #jump{background:rgba(70,200,100,.42);border-color:rgba(42,34,48,.55);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.5);box-shadow:0 var(--lip) 0 rgba(42,34,48,.4);backdrop-filter:blur(1px)}
 #jump:active{background:rgba(70,200,100,.85);box-shadow:0 0 0 rgba(42,34,48,.4)}
+/* credit: flat rainbow lettering with unicorn decorations. Deliberately NOT a box or pill, so nobody mistakes it for a button */
+#credit{position:static;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;animation:none;padding:0 4px;color:#fffbe8;font-size:clamp(11px,3vh,15px);font-weight:900;letter-spacing:1px;text-align:center;line-height:1.15;text-shadow:2px 2px 0 #2a2230,-1px -1px 0 #2a2230,1px -1px 0 #2a2230,-1px 1px 0 #2a2230;pointer-events:none;user-select:none;-webkit-user-select:none;cursor:default}
+#credit b{display:block;font-size:1.75em;letter-spacing:2px;background:linear-gradient(90deg,#ff3b3b,#ff9a1f,#ffe14d,#3ddc5a,#38a8ff,#a855ff,#ff3b3b);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;text-shadow:none;filter:drop-shadow(2px 2px 0 #2a2230) drop-shadow(-1px -1px 0 #2a2230) drop-shadow(1px -1px 0 #2a2230) drop-shadow(-1px 1px 0 #2a2230);animation:rbs 3s linear infinite}
+#credwrap{position:relative;display:flex;align-items:center;gap:calc(6px*var(--ui));overflow:hidden;padding:2px 4px 6px}
+.uni,.poop{image-rendering:pixelated;image-rendering:crisp-edges}
+.uni{height:clamp(32px,10vh,60px);width:auto;animation:prance .45s steps(2,jump-none) infinite alternate}
+.uni.flip{animation-name:pranceF}
+@keyframes prance{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+@keyframes pranceF{from{transform:scaleX(-1) translateY(0)}to{transform:scaleX(-1) translateY(-5px)}}
+.poop{position:absolute;height:clamp(12px,3.6vh,20px);width:auto;top:30%;opacity:0;animation:poopfall 2.4s ease-in infinite;pointer-events:none}
+.pl1{left:0}.pl2{left:6%;animation-delay:1.2s}.pr1{right:0;animation-delay:.6s}.pr2{right:6%;animation-delay:1.8s}
+@keyframes poopfall{0%{transform:translateY(-6px) rotate(0);opacity:0}12%{opacity:1}100%{transform:translateY(clamp(26px,9vh,48px)) rotate(300deg);opacity:0}}
 </style>
 </head>
 <body>
@@ -182,7 +194,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <h1>STEAL A ROMAN</h1><div id="sub">Grab an egg, Hatch a Roman, Learn their Story</div>
 <div id="ldbar"><div id="bar"></div></div><div id="ldg">Loading...</div>
 <button class="btn" id="play">PLAY</button>
-<div id="credit">A game brought to you by Hazel Gracie-Herst</div>
+<div id="credwrap"><img class="uni" alt=""><div id="credit">★ A game brought to you by ★<b>HAZEL GRACIE-HERST</b></div><img class="uni flip" alt=""><img class="poop pl1" alt=""><img class="poop pl2" alt=""><img class="poop pr1" alt=""><img class="poop pr2" alt=""></div>
 <div id="a2hs">Tip: for full screen, tap Share, then Add to Home Screen</div></div>
 <canvas id="c"></canvas>
 <div id="labels"></div>
@@ -502,6 +514,25 @@ function openShop(msg){const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[l
  $('bs').onclick=()=>{if(st.money<sc)return;sfx('buy');st.money-=sc;st.speed+=SPEED_STEP;st.speedBuys++;lastF=Math.floor(st.speed);hud();save();openShop('+'+SPEED_STEP+' speed!')};
  if($('bv'))$('bv').onclick=()=>{if(st.money<VIP_COST)return;sfx('buy');st.money-=VIP_COST;st.vip=1;applyVip();hud();save();openShop('Welcome, VIP! Visit the VIP Lounge.')}}
 $('shop').onclick=()=>openShop();
+// pixel sprites drawn in code: prancing unicorns and rainbow swirl poops for the title credit
+const RB=['#ff3b3b','#ff9a1f','#ffe14d','#3ddc5a','#38a8ff','#a855ff'];
+function sprite(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');draw((x,y,ww,hh,col)=>{g.fillStyle=col;g.fillRect(x,y,ww,hh)});
+ const d=g.getImageData(0,0,w,h).data,o=document.createElement('canvas');o.width=w+2;o.height=h+2;const og=o.getContext('2d'),A=(x,y)=>x>=0&&y>=0&&x<w&&y<h&&d[(y*w+x)*4+3]>0;
+ og.fillStyle='#2a2230';for(let y=-1;y<=h;y++)for(let x=-1;x<=w;x++)if(!A(x,y)&&(A(x+1,y)||A(x-1,y)||A(x,y+1)||A(x,y-1)))og.fillRect(x+1,y+1,1,1);
+ og.drawImage(c,1,1);return o.toDataURL()}
+function unicornSprite(){return sprite(21,17,R=>{
+ R(3,7,11,5,'#fff');R(3,10,11,2,'#e9e3f5');                               // body
+ [[3,12],[6,12],[9,12],[12,12]].forEach(l=>{R(l[0],12,2,3,'#fff');R(l[0],14,2,1,'#ff9ad5')}); // legs + pink hooves
+ R(12,4,3,5,'#fff');R(13,3,6,4,'#fff');R(17,5,3,3,'#fff');R(19,6,1,1,'#ff9ad5');R(16,4,1,1,'#2a2230'); // neck, head, nose, eye
+ R(14,2,1,1,'#fff');R(16,0,1,3,'#ffd34d');R(16,0,1,1,'#fff3a0');            // ear + golden horn
+ RB.forEach((c,i)=>R(10,3+i,2,1,c));RB.forEach((c,i)=>R(11,3+i,1,1,c));      // rainbow mane
+ [[1,7],[0,8],[0,9],[0,10],[1,11],[1,12]].forEach((p,i)=>R(p[0],p[1],2,1,RB[i])) // rainbow tail
+})}
+function poopSprite(){return sprite(16,14,R=>{
+ [14,12,10,8,6,3].forEach((w,i)=>R(8-Math.ceil(w/2),12-i*2,w,2,RB[i]));R(7,1,2,1,RB[5]);
+ R(5,8,1,1,'#2a2230');R(10,8,1,1,'#2a2230');R(7,9,2,1,'#b3243a');           // cute face
+ R(4,10,1,1,'#fff');R(12,6,1,1,'#fff')})}
+{const u=unicornSprite(),p=poopSprite();document.querySelectorAll('.uni').forEach(e=>e.src=u);document.querySelectorAll('.poop').forEach(e=>e.src=p)}
 const PORT={};
 function portrait(r){if(PORT[r[0]])return PORT[r[0]];const lk=LOOK[r[0]]||{},c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d'),F=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h)},hx=n=>'#'+n.toString(16).padStart(6,'0');
  F(CSS[r[1]],0,0,16,16);F('rgba(255,255,255,.25)',0,0,16,7);
