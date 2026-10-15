@@ -18,7 +18,7 @@ with a real historical fact. Keep them or sell them for money.
 
 ## Code map (index.html)
 - `RAR`, `ECOL`, `CSS`, `PRICE`, `ROMANS`: data tables (rarity names, colours, sell values, cards with facts)
-- `req(t)`: speed needed to carry an egg of tier t (100 + 30*t)
+- `req(t)`: speed needed to carry an egg of tier t (150 + 50*t)
 - Scene setup: ground, temple (`BX`), treadmill (`TX`,`TZ`), Colosseum walls (`ACX`,`AR`, gate on the left)
 - `person()`: builds the blocky player and soldier models
 - `slots`: the 68 arena eggs, tier rises with distance from the gate. `BSLOT`: 6 base egg slots
@@ -38,3 +38,7 @@ with a real historical fact. Keep them or sell them for money.
 - Kept Romans are not shown in the base, only unlocked in Facts. Could display them standing in the temple
 - No sound, no save data, no multiplayer
 - Pixel-art character faces, better Colosseum arches, hatching animation
+
+## Controls
+- Walk: joystick or WASD. Jump: JUMP button or Space. Zoom: +/- buttons, two-finger pinch, mouse wheel, or +/- keys
+- Kept Romans walk around the roofless temple (`LOOK` table = their costumes, `addWalker`). Facts list shows a pixel portrait per Roman (`portrait`)
