@@ -511,7 +511,7 @@ function startHatch(e){if(!e||hatching||p.carry||p.fling)return;
  if(e.state==='incubating'){speedDialog(e);return}
  if(e.state!=='ready'&&HATCH_WAIT[e.t]>0){e.state='incubating';e.end=Date.now()+HATCH_WAIT[e.t]*1000;sfx('start');save();toast(RAR[e.t]+' egg is incubating for '+fmtT(HATCH_WAIT[e.t])+'. It hatches when the timer ends!');return}
  beginHatch(e)}
-const HATCH_ANIM=false; // set to true to bring back the wobble / crack / burst / Roman-reveal sequence
+const HATCH_ANIM=true; // set to true to bring back the wobble / crack / burst / Roman-reveal sequence
 function beginHatch(e){const pool=ROMANS.filter(r=>r[1]===e.t),pick=pool[Math.floor(Math.random()*pool.length)];
  if(!HATCH_ANIM){sfx('burst',e.t);$('open').style.display='none';hatch(e,pick);return}
  hatching={e,r:pick,t:0,t2:0,stage:0,cracks:0,shell:[],m:null};$('open').style.display='none'}
