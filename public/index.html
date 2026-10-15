@@ -169,6 +169,12 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 #readyBtn{border-radius:18px}
 .acts .btn{min-height:max(44px,calc(48px*var(--ui)))}
 @keyframes glow{from{box-shadow:0 var(--lip) 0 #2a2230,inset 0 3px 0 rgba(255,255,255,.7),0 0 0 0 rgba(255,211,77,0)}to{box-shadow:0 var(--lip) 0 #2a2230,inset 0 3px 0 rgba(255,255,255,.7),0 0 14px 4px rgba(255,211,77,.95)}}
+#adlbl{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;text-align:left}
+#adlbl small{font-size:.8em;font-weight:700;opacity:.85}
+.adbtn small{display:block;font-size:.65em;font-weight:700;opacity:.8}
+/* JUMP is see-through so it never hides the game, and firms up while pressed */
+#jump{background:rgba(70,200,100,.42);border-color:rgba(42,34,48,.55);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.5);box-shadow:0 var(--lip) 0 rgba(42,34,48,.4);backdrop-filter:blur(1px)}
+#jump:active{background:rgba(70,200,100,.85);box-shadow:0 0 0 rgba(42,34,48,.4)}
 </style>
 </head>
 <body>
@@ -410,7 +416,7 @@ addEventListener('touchend',()=>pd=0);
 addEventListener('keydown',e=>{if(e.key===' ')jump();if(e.key==='+'||e.key==='=')setZ(Z-.2);if(e.key==='-')setZ(Z+.2)});
 // ---- Watch to Earn: cash ticks up the longer you watch, and the rate steps up. Total watch time also unlocks VIP free
 const AD_TIERS=[[0,2.5],[20,3],[60,4],[120,5],[180,6]]; // [from second, $ per second]
-const AD_MIN=20,AD_COOL=60,VIP_AD_SECS=300; // close button after 20s, 60s cooldown, VIP free after 5 min of total viewing
+const AD_MIN=20,AD_COOL=60,VIP_AD_SECS=300,AD_LEN=231; // AD_LEN = length of the video in seconds, used for the 'up to $' text // close button after 20s, 60s cooldown, VIP free after 5 min of total viewing
 let pendingBuy=null,adOpen=false,adNext=0,adFail=false,adPaid=false,adWatch=0,adLast=0,adGiven=0,adTier=0,adTimer=null,adPopAcc=0,adVipNow=false,adMode='earn',adEgg=null,adCut=0;const SPEEDUP=6; // watching speeds a hatching egg up this many times
 const adv=$('advid');
 const adEarned=sec=>{let t=0;for(let i=0;i<AD_TIERS.length;i++){const a=AD_TIERS[i][0],b=i+1<AD_TIERS.length?AD_TIERS[i+1][0]:1e9;if(sec>a)t+=(Math.min(sec,b)-a)*AD_TIERS[i][1]}return t};
@@ -437,7 +443,8 @@ function adTick(){if(!adOpen||adFail)return;
  if(adMode==='earn'&&!adPaid&&adWatch>=AD_MIN){adPaid=true;sfx('buy');$('adx').style.display='block';$('adtxt').classList.add('paid')}
  if(!st.vip&&(st.adSecs||0)>=VIP_AD_SECS){st.vip=1;applyVip();adVipNow=true;sfx('buy');save()}
  adTxt()}
-function adLabel(){const w=Date.now()<adNext;$('adlbl').textContent=w?'Ad in '+Math.ceil((adNext-Date.now())/1000)+'s':'WATCH TO EARN';$('ad').disabled=w}
+const money=n=>'$'+Math.floor(n).toLocaleString('en-US'),adPayTxt=()=>'+$'+fmtD(AD_TIERS[0][1])+' per second \u25B2',adPayLong=()=>'+$'+fmtD(AD_TIERS[0][1])+' per second, rising to $'+fmtD(AD_TIERS[AD_TIERS.length-1][1])+'/s';
+function adLabel(){const w=Date.now()<adNext;$('adlbl').innerHTML=w?'Ad in '+Math.ceil((adNext-Date.now())/1000)+'s':'<b>WATCH TO EARN</b><small>'+adPayTxt()+'</small>';$('ad').disabled=w}
 setInterval(adLabel,500);
 function adStart(egg){egg=(egg&&egg.m)?egg:null;if(adOpen||(!egg&&Date.now()<adNext))return;adMode=egg?'speed':'earn';adEgg=egg;adCut=0;adOpen=true;adFail=adPaid=adVipNow=false;adWatch=adLast=adGiven=adTier=adPopAcc=0;$('adx').style.display=egg?'block':'none';$('adtxt').classList.remove('paid');$('adbox').style.display='block';adv.src='ad.mp4';adTxt();adv.play().catch(()=>{});clearInterval(adTimer);adTimer=setInterval(adTick,100)}
 $('ad').onclick=()=>adStart();
@@ -454,7 +461,7 @@ function lock(){if(screen.orientation&&screen.orientation.lock)screen.orientatio
 // dialogs
 const dlg=$('dlg');
 function show(h){$('dlgBody').innerHTML=h;dlg.showModal()}
-function adBtnHtml(id){const left=Math.ceil((adNext-Date.now())/1000);return left>0?`<button class="btn adbtn" id="${id}" disabled>▶ Ad ready in ${left}s</button>`:`<button class="btn adbtn" id="${id}">▶ WATCH TO EARN</button>`}
+function adBtnHtml(id){const left=Math.ceil((adNext-Date.now())/1000);return left>0?`<button class="btn adbtn" id="${id}" disabled>▶ Ad ready in ${left}s</button>`:`<button class="btn adbtn" id="${id}">▶ WATCH TO EARN <small>${adPayLong()}</small></button>`}
 function needCash(cost,what,retry){show(`<h3>Not enough cash!</h3><p>${what} costs $${cost}. You have $${st.money}, so you need $${cost-st.money} more.</p><div class="acts">${adBtnHtml('ncad')}</div><div class="acts"><button class="btn" id="ncx">Close</button></div>`);
  $('ncx').onclick=()=>dlg.close();$('ncad').onclick=()=>{dlg.close();pendingBuy=retry;adStart()}}
 function buyBase(){const lv=st.baseLv;if(lv>=CAPS.length-1)return;const c=BASE_COST[lv];if(st.money<c)return needCash(c,'Base upgrade (Level '+(lv+2)+')',buyBase);
