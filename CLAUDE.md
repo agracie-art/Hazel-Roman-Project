@@ -43,3 +43,5 @@ with a real historical fact. Keep them or sell them for money.
 - Walk: joystick or WASD. Jump: JUMP button or Space. Zoom: +/- buttons, two-finger pinch, mouse wheel, or +/- keys
 - Kept Romans walk around the roofless temple (`LOOK` table = their costumes, `addWalker`). Facts list shows a pixel portrait per Roman (`portrait`)
 - Watch-an-ad button (top right): plays public/ad.mp4 (not cached by the service worker), pays AD_REWARD after AD_MIN seconds watched, 60s cooldown. Close with X, Skip or Escape
+- Shop (button, top right): `openShop()`. Stronger base (`CAPS` pads 6/9/12/15/18, `BASE_COST`, `applyBase()`), buy speed (+`SPEED_STEP`, `speedCost()` = 50*(buys+1)), VIP (`VIP_COST`). Saved in `st.baseLv`, `st.speedBuys`, `st.vip`
+- VIP: gold crown + VIP label over the player (`applyVip()`), VIP Lounge south of the base (`VX0..VZ1`) is roped off without VIP (solid, flashes `#vipPrompt`), has a x2 speed treadmill (12/s vs 6/s)

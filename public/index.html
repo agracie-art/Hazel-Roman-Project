@@ -82,6 +82,13 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 .ucount{font-weight:900;font-size:clamp(34px,13vh,72px);line-height:1;display:flex;align-items:baseline;gap:2px}
 .ucount #unum{display:inline-block}
 .spk{position:absolute;left:50%;top:50%;width:12px;height:12px;background:#ffd34d;box-shadow:0 0 0 2px #2a2230;pointer-events:none}
+#shop{background:linear-gradient(#bfe9ff,#7cc4ee)}
+#vipPrompt{display:none;position:fixed;left:50%;top:38%;transform:translateX(-50%);z-index:12;background:#c2364a;color:#fff;font-size:18px;padding:12px 18px;animation:vipflash .35s infinite alternate}
+@keyframes vipflash{from{background:#c2364a}to{background:#ffd34d;color:#2a2230}}
+.lbl.vip{background:#ffd34d;color:#2a2230;border:2px solid #2a2230;font-size:14px}
+.shopmsg{background:#2e9e45;color:#fff;font-weight:700;padding:6px 10px;margin:6px 0}
+.btn:disabled{opacity:.45;cursor:default}
+.row .btn{white-space:nowrap}
 .row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:8px 0;border-top:2px dashed var(--muted)}
 .fact{font-size:13px;color:var(--muted);margin-top:2px}
 .pt{width:52px;height:52px;image-rendering:pixelated;border:3px solid #2a2230;flex:none;background:#fff}
@@ -101,10 +108,11 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <canvas id="c"></canvas>
 <div id="labels"></div>
 <div id="flash"></div>
+<button class="btn" id="vipPrompt">★ VIP ONLY! Tap to buy VIP</button>
 <div id="unlock" popover="manual"></div>
 <div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span></div></div>
 <div id="hudL"><div id="moneyRow"><div class="pill" id="money">$0</div><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD +$50</span></button></div><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 68</div></div>
-<div id="hudR"><button class="btn" id="facts">Facts</button><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
+<div id="hudR"><button class="btn" id="facts">Facts</button><button class="btn" id="shop">Shop</button><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
 <div class="pill" id="toast"></div>
 <div class="pill" id="hint"></div>
 <div class="pill edge" id="edgeR"></div><div class="pill edge" id="edgeL"></div>
@@ -140,6 +148,9 @@ const $=id=>document.getElementById(id);
 const st={money:0,speed:120,found:{}};
 try{Object.assign(st,JSON.parse(localStorage.getItem('reg-save')||'{}'))}catch(e){}
 const save=()=>{st.base=baseEggs.map(e=>({t:e.t,i:BSLOT.indexOf(e.q)}));try{localStorage.setItem('reg-save',JSON.stringify(st))}catch(e){}};
+st.baseLv=st.baseLv||0;st.speedBuys=st.speedBuys||0;st.vip=st.vip||0;
+const CAPS=[6,9,12,15,18],BASE_COST=[150,500,1500,4000],VIP_COST=1000,SPEED_STEP=20;
+const cap=()=>CAPS[st.baseLv],speedCost=()=>50*(st.speedBuys+1);
 setInterval(save,2000);addEventListener('pagehide',save);
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
 
@@ -165,7 +176,7 @@ function updateLabels(){const W=innerWidth,H=innerHeight,now=performance.now(),d
  for(let i=POPS.length-1;i>=0;i--){const o=POPS[i];o.age+=dt;if(o.age>(o.big?1.3:.9)){o.el.remove();POPS.splice(i,1);continue}
   _lv.set(o.x,o.y+o.age*2.4,o.z).project(camera);o.el.style.opacity=Math.max(0,1-o.age/(o.big?1.3:.9)*.9);
   o.el.style.transform='translate('+Math.round((_lv.x+1)/2*W)+'px,'+Math.round((1-_lv.y)/2*H)+'px) translate(-50%,-100%)'}
-for(const o of LBL){_lv.copy(o.position).project(camera);
+for(const o of LBL){if(o.hide){o.el.style.display='none';continue}_lv.copy(o.position).project(camera);
  if(_lv.z>1||Math.abs(_lv.x)>1.15||Math.abs(_lv.y)>1.15){o.el.style.display='none';continue}
  o.el.style.display='block';o.el.style.transform='translate('+Math.round((_lv.x+1)/2*W)+'px,'+Math.round((1-_lv.y)/2*H)+'px) translate(-50%,-100%)'}}
 
@@ -182,7 +193,7 @@ box(16,1,8,0xe8e2d4,BX,.5,-4);
 box(9,4,1,0xd8d0be,BX,3,-7.2);
 box(15,.4,.5,0xf4f0e6,BX,5.1,-1);
 box(1.4,2.4,.3,0x5b1e4a,BX,2.2,-6.6);
-label('Your base',BX,7.4,-3.5);
+const baseLabel=label('Your base',BX,7.4,-3.5);
 box(14.6,.08,2.6,0xe0c878,BX,.05,3.5);
 label('Tap an egg to hatch it',BX,3.6,3.5);
 
@@ -191,6 +202,26 @@ const TX=-14,TZ=6;
 box(2.6,.35,4,0x333333,TX,.2,TZ);
 const belt=[];for(let i=0;i<5;i++)belt.push(box(2.2,.1,.3,0xffd34d,TX,.42,TZ-1.6+i*.8));
 label('Treadmill',TX,3.2,TZ);
+const baseExtras=[];
+function applyBase(){const lv=st.baseLv,add=m=>{baseExtras.push(m);return m};baseExtras.splice(0).forEach(o=>scene.remove(o));
+ for(let r=1;r<cap()/6;r++)add(box(14.6,.08,2.6,0xe0c878,BX,.05,3.5+3.4*r));
+ if(lv>=2)[-6,-3.6,-1.2,1.2,3.6,6].forEach(dx=>add(box(1.4,.35,1.4,0xffd34d,BX+dx,5.15,-1)));
+ if(lv>=3)[-8,8].forEach(dx=>{const bx=BX+dx+(dx<0?.9:-.9);add(box(.25,6,.25,0x6b4a2a,BX+dx,3,1.2));add(box(1.6,2.4,.15,0xb02a2a,bx,4.6,1.2));add(box(.6,.6,.2,0xffd34d,bx,4.6,1.3))});
+ if(lv>=4){add(box(2,1.2,2,0xe8e2d4,BX,1.6,-6));add(box(1.1,2.4,.8,0xffd34d,BX,3.4,-6));add(box(2.8,.5,.5,0xffd34d,BX,4.2,-6))}
+ baseLabel.el.textContent='Your base Lv '+(lv+1)}
+applyBase();
+// ---- VIP lounge (cordoned off unless you own VIP)
+const VX0=-32,VX1=-16,VZ0=14,VZ1=24,VTX=-24,VTZ=19;
+box(16,.06,10,0xb02a2a,-24,.07,19);box(16.6,.05,.5,0xffd34d,-24,.08,14);box(16.6,.05,.5,0xffd34d,-24,.08,24);
+const vipRopesN=[];
+function postLine(x0,z0,x1,z1,n,north){const pts=[];for(let i=0;i<=n;i++)pts.push([x0+(x1-x0)*i/n,z0+(z1-z0)*i/n]);
+ pts.forEach(q=>box(.3,1.5,.3,0xffd34d,q[0],.75,q[1]).add(new THREE.Mesh(new THREE.BoxGeometry(.5,.3,.5),M(0xffd34d))));
+ for(let i=0;i<n;i++){const a=pts[i],b=pts[i+1],len=Math.hypot(b[0]-a[0],b[1]-a[1]),r=box(Math.abs(b[0]-a[0])>.1?len:.12,.14,Math.abs(b[0]-a[0])>.1?.12:len,0xc2364a,(a[0]+b[0])/2,1.15,(a[1]+b[1])/2);if(north)vipRopesN.push(r)}}
+postLine(VX0,VZ0,VX1,VZ0,4,true);postLine(VX0,VZ1,VX1,VZ1,4,false);postLine(VX0,VZ0,VX0,VZ1,3,false);postLine(VX1,VZ0,VX1,VZ1,3,false);
+label('★ VIP Lounge ★',-24,4.2,14).el.className+=' vip';
+box(2.6,.35,4,0xc9a020,VTX,.2,VTZ);
+const belt2=[];for(let i=0;i<5;i++)belt2.push(box(2.2,.1,.3,0xc2364a,VTX,.42,VTZ-1.6+i*.8));
+label('VIP Treadmill x2',VTX,3.2,VTZ);
 
 // colosseum walls
 const walls=[];
@@ -224,6 +255,10 @@ function person(o){const g=new THREE.Group(),skin=o.skin;
   box(1.0,.38,.22,0xc2364a,0,2.82,0,g)}
  g.userData={l,r,al,ar};scene.add(g);return g}
 const player=person({skin:0xf0c8a0,tunic:0xf4f0e6,hair:0x5a3a1a,toga:1});
+const vipTag=label('★ VIP',0,0,0);vipTag.el.className+=' vip';vipTag.hide=true;let crown=null;
+function applyVip(){vipRopesN.forEach(o=>o.visible=!st.vip);vipTag.hide=!st.vip;
+ if(st.vip&&!crown){crown=new THREE.Group();crown.add(box(.8,.16,.8,0xffd34d,0,2.66,0,crown));[[-.3,-.3],[.3,-.3],[-.3,.3],[.3,.3],[0,0]].forEach(q=>box(.16,.32,.16,0xffd34d,q[0],2.9,q[1],crown));player.add(crown)}}
+applyVip();
 const sol=person({skin:0xe0b088,tunic:0xb02a2a,legion:1});sol.scale.setScalar(1.7);
 box(.2,1.7,1.05,0xb8921e,.78,1.15,.25,sol);box(.24,1.5,.85,0xb02a2a,.8,1.15,.25,sol);box(.28,.35,.35,0xffd34d,.84,1.15,.25,sol);
 const sword=box(.1,.1,1.4,0xd8d8d8,-.75,1.1,.7,sol);
@@ -252,7 +287,7 @@ function addWalker(name){const lk=LOOK[name]||{tunic:0x888888},m=person(Object.a
  const tag=label(name,0,0,0);tag.scale.set(4,1,1);
  const w={name,sc:lk.sc||1,m,tag,x:-24+(Math.random()-.5)*10,z:-4+(Math.random()-.5)*3,tx:0,tz:0,wait:Math.random()*2,h:2.9*(lk.sc||1)+.8};
  m.position.set(w.x,1,w.z);walkers.push(w);return w}
-const baseEggs=[],BSLOT=[...Array(6)].map((_,i)=>({x:-30+i*2.4,z:3.5}));
+const baseEggs=[],BSLOT=[...Array(18)].map((_,i)=>({x:-30+(i%6)*2.4,z:3.5+3.4*Math.floor(i/6)}));
 function putBaseEgg(t,q){const m=makeEgg(t);m.position.set(q.x,0,q.z);scene.add(m);baseEggs.push({t,m,q})}
 (st.base||[]).forEach(b=>{if(BSLOT[b.i])putBaseEgg(b.t,BSLOT[b.i])});
 if(!st.kept)st.kept=[];st.kept.slice(-14).forEach(addWalker);
@@ -301,6 +336,19 @@ function lock(){if(screen.orientation&&screen.orientation.lock)screen.orientatio
 // dialogs
 const dlg=$('dlg');
 function show(h){$('dlgBody').innerHTML=h;dlg.showModal()}
+function openShop(msg){const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[lv],sc=speedCost();
+ const btn=(id,cost,label)=>`<button class="btn" id="${id}"${st.money<cost?' disabled':''}>${label}</button>`;
+ show(`<div class="fhead"><h3>Shop  $${st.money}</h3><button class="btn" id="sx">Close</button></div>${msg?`<div class="shopmsg">${msg}</div>`:''}
+<div class="row"><div><b>Stronger base (Lv ${lv+1})</b><div class="fact">${maxed?'Max level! '+cap()+' egg pads.':'Next level: '+CAPS[lv+1]+' egg pads and a fancier temple. You have '+cap()+'.'}</div></div>${maxed?'<span class="tag" style="background:#2e9e45">MAX</span>':btn('bb',bc,'$'+bc)}</div>
+<div class="row"><div><b>Buy speed +${SPEED_STEP}</b><div class="fact">Your speed is ${Math.floor(st.speed)}. The price goes up each time.</div></div>${btn('bs',sc,'$'+sc)}</div>
+<div class="row"><div><b>★ VIP access</b><div class="fact">Gold crown badge over your character, the VIP Lounge and a double speed treadmill.</div></div>${st.vip?'<span class="tag" style="background:#c9861a">OWNED</span>':btn('bv',VIP_COST,'$'+VIP_COST)}</div>
+<div class="acts"><button class="btn" id="sx2">Close</button></div>`);
+ $('sx').onclick=$('sx2').onclick=()=>dlg.close();
+ if($('bb'))$('bb').onclick=()=>{if(st.money<bc)return;st.money-=bc;st.baseLv++;applyBase();hud();save();openShop('Base upgraded to Level '+(st.baseLv+1)+'!')};
+ $('bs').onclick=()=>{if(st.money<sc)return;st.money-=sc;st.speed+=SPEED_STEP;st.speedBuys++;lastF=Math.floor(st.speed);hud();save();openShop('+'+SPEED_STEP+' speed!')};
+ if($('bv'))$('bv').onclick=()=>{if(st.money<VIP_COST)return;st.money-=VIP_COST;st.vip=1;applyVip();hud();save();openShop('Welcome, VIP! Visit the VIP Lounge.')}}
+$('shop').onclick=()=>openShop();
+$('vipPrompt').onclick=()=>{vipFlash=0;openShop()};
 const PORT={};
 function portrait(r){if(PORT[r[0]])return PORT[r[0]];const lk=LOOK[r[0]]||{},c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d'),F=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h)},hx=n=>'#'+n.toString(16).padStart(6,'0');
  F(CSS[r[1]],0,0,16,16);F('rgba(255,255,255,.25)',0,0,16,7);
@@ -375,10 +423,10 @@ function hatch(e,r){const price=PRICE[e.t]*5;
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
 
 // ---------- loop ----------
-const WALK=7,TREAD_RATE=6;
+const WALK=7;let vipFlash=0,curRate=0;
 let Z=Math.max(.45,Math.min(1.8,st.zoom||1)),pvy=0,py=0;
 const setZ=z=>{Z=Math.max(.45,Math.min(1.8,z));st.zoom=Z};
-let lastF=Math.floor(st.speed),beltPos=0,gainTotal=0,gainIdle=0,lastEggs=-1,dust=[];
+let lastF=Math.floor(st.speed),beltPos=0,beltPos2=0,gainTotal=0,gainIdle=0,lastEggs=-1,dust=[];
 for(let i=0;i<10;i++){const d=box(.35,.35,.35,0xe8dfc8,0,-5,0);dust.push({m:d,t:0})}
 function setLimbs(u,ph,amp,armAmp){u.l.rotation.x=Math.sin(ph)*amp;u.r.rotation.x=-Math.sin(ph)*amp;u.al.rotation.x=-Math.sin(ph)*armAmp;u.ar.rotation.x=Math.sin(ph)*armAmp}
 function update(dt){
@@ -398,7 +446,11 @@ function update(dt){
   p.x=Math.max(-36,Math.min(ACX+AR+4,p.x+ix*v*dt));p.z=Math.max(-AR-4,Math.min(AR+4,p.z+iz*v*dt));
   for(const w of walls){const dx=p.x-w.x,dz=p.z-w.z,d=Math.hypot(dx,dz);if(d<2.9){p.x=w.x+dx/d*2.9;p.z=w.z+dz/d*2.9}}
   if(py>0||pvy>0){pvy-=26*dt;py=Math.max(0,py+pvy*dt);if(py===0)pvy=0}
-  onTread=!p.carry&&py<.05&&Math.abs(p.x-TX)<1.4&&Math.abs(p.z-TZ)<2.1;
+  if(!st.vip){const L=VX0-.6,R=VX1+.6,T=VZ0-.6,B=VZ1+.6;
+   if(p.x>L&&p.x<R&&p.z>T&&p.z<B){const d=[p.x-L,R-p.x,p.z-T,B-p.z],m=Math.min(...d);if(m===d[0])p.x=L;else if(m===d[1])p.x=R;else if(m===d[2])p.z=T;else p.z=B;vipFlash=3}
+   else if(p.x>VX0&&p.x<VX1&&p.z>T-.7&&p.z<=T)vipFlash=Math.max(vipFlash,2)}
+  const ok=!p.carry&&py<.05,onN=ok&&Math.abs(p.x-TX)<1.4&&Math.abs(p.z-TZ)<2.1,onV=ok&&st.vip&&Math.abs(p.x-VTX)<1.4&&Math.abs(p.z-VTZ)<2.1;
+  curRate=onV?12:onN?6:0;onTread=curRate>0;
   if(l>.1)player.rotation.y=Math.atan2(ix,iz);else if(onTread)player.rotation.y=Math.PI;
   player.rotation.x=onTread?.3:0;
   if(onTread)setLimbs(player.userData,now/55,1.1,1.1);
@@ -412,14 +464,17 @@ function update(dt){
   else{w.x+=dx/d*1.4*dt;w.z+=dz/d*1.4*dt;w.m.rotation.y=Math.atan2(dx,dz);setLimbs(w.m.userData,now/160,.6,.6)}
   w.m.position.set(w.x,1,w.z);w.tag.position.set(w.x,1+w.h,w.z)}
  // treadmill + speed feedback
- beltPos+=(onTread?7:.8)*dt;belt.forEach((b,i)=>b.position.z=TZ-1.6+((i*.8+beltPos)%4));
- if(onTread){const g=TREAD_RATE*dt;st.speed+=g;gainTotal+=g;gainIdle=0;
+ beltPos+=(curRate===6?7:.8)*dt;belt.forEach((b,i)=>b.position.z=TZ-1.6+((i*.8+beltPos)%4));
+ beltPos2=(beltPos2||0)+(curRate===12?10:.8)*dt;belt2.forEach((b,i)=>b.position.z=VTZ-1.6+((i*.8+beltPos2)%4));
+ vipFlash=Math.max(0,vipFlash-dt);$('vipPrompt').style.display=vipFlash>0&&!st.vip?'block':'none';
+ vipTag.position.set(p.x,py+3.9,p.z);
+ if(onTread){const g=curRate*dt;st.speed+=g;gainTotal+=g;gainIdle=0;
   const f=Math.floor(st.speed);for(let k=lastF+1;k<=f;k++){pop('+1');if(k%10===0)pop('+10!',true)}lastF=f;
   dust.forEach(d=>{if(d.t<=0&&Math.random()<.15){d.t=.5;d.m.position.set(p.x+(Math.random()-.5)*1.4,.3,p.z+1.2)}});hud()}
  else if(gainTotal>0){lastF=Math.floor(st.speed);gainIdle+=dt;if(gainIdle>2.5)gainTotal=0}
  dust.forEach(d=>{if(d.t>0){d.t-=dt;d.m.position.z+=dt*4;d.m.position.y+=dt*1.5;d.m.scale.setScalar(Math.max(.01,d.t*2));if(d.t<=0)d.m.position.y=-5}});
  const gE=$('gain');gE.style.display=gainTotal>0?'block':'none';
- if(gainTotal>0)gE.textContent='▲ +'+Math.floor(gainTotal)+' speed ('+(onTread?'+'+TREAD_RATE+'/s':'stopped')+')';
+ if(gainTotal>0)gE.textContent='▲ +'+Math.floor(gainTotal)+' speed ('+(onTread?'+'+curRate+'/s':'stopped')+')';
  $('speed').classList.toggle('up',onTread);
  // pickup
  if(!p.carry&&!p.fling)for(const s of slots){if(s.alive&&Math.hypot(p.x-s.x,p.z-s.z)<1.6){s.alive=false;s.m.visible=false;s.timer=8;p.carry=s;
@@ -429,7 +484,7 @@ function update(dt){
  slots.forEach((s,i)=>{if(s.alive)s.m.position.y=Math.abs(Math.sin(now/500+i))*.18});
  const nAlive=slots.reduce((n,s)=>n+(s.alive?1:0),0);if(nAlive!==lastEggs){lastEggs=nAlive;$('eggs').textContent='Eggs '+nAlive+'/68'}
  // deposit
- if(p.carry&&p.x<-9){if(baseEggs.length<6){const b=BSLOT.find(q=>!baseEggs.some(e=>e.q===q));putBaseEgg(p.carry.t,b);
+ if(p.carry&&p.x<-9){if(baseEggs.length<cap()){const b=BSLOT.slice(0,cap()).find(q=>!baseEggs.some(e=>e.q===q));putBaseEgg(p.carry.t,b);
   player.remove(p.mesh);p.carry.alive=false;p.carry.timer=8;p.carry=null;toast('Egg placed in your base. Walk up to it and tap Open egg to hatch it.')}else if(!p.warned){toast('Base is full. Open an egg first.');p.warned=1;setTimeout(()=>p.warned=0,3000)}}
  // soldier
  so.cool-=dt;so.swing=Math.max(0,so.swing-dt);
@@ -450,7 +505,7 @@ function update(dt){
  const h=$('hint');if(p.carry&&p.x>-9){h.textContent='<< Run to your base!';h.style.display='block'}
  else if(!p.carry&&p.x<-4&&!p.fling){h.textContent='Eggs this way >>';h.style.display='block'}else h.style.display='none';
  // camera
- const hz=hatching?Z*.7:Z,fx=hatching?hatching.e.q.x-12*hz:p.x,fz=hatching?hatching.e.q.z-8*hz:(p.x<-10?Math.min(p.z,-3):p.z);
+ const hz=hatching?Z*.7:Z,fx=hatching?hatching.e.q.x-12*hz:p.x,fz=hatching?hatching.e.q.z-8*hz:(p.x<-10?(p.z>12?p.z:Math.min(p.z,-3)):p.z);
  camera.position.lerp(new THREE.Vector3(fx+12*hz,28*hz,fz+22*hz),.1);camera.lookAt(camera.position.x,0,camera.position.z-14*hz);
  edge(new THREE.Vector3(ACX,2,0),$('edgeR'),'Colosseum >>');edge(new THREE.Vector3(BX,2,0),$('edgeL'),'<< Your base');
 }
