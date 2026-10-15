@@ -41,5 +41,5 @@ Fact-check note for a possible later pass: Julius Caesar was a dictator, not an 
 emperor). Kept as the designer wrote it.
 
 ## Prototype assumptions (made up, change freely)
-Egg tier equals card rarity. Speed needed = 100 + 30 * tier. Sell price = 5 * rarity value (1, 3, 8, 20, 50,
+Egg tier equals card rarity. Speed needed = 150, 220, 350, 600, 1000, 1600, 2500 for tiers 0-6 (see `REQ` in index.html). Sell price = 5 * rarity value (1, 3, 8, 20, 50,
 120, 300). Soldier chases only when you carry an egg.

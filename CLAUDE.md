@@ -18,7 +18,7 @@ with a real historical fact. Keep them or sell them for money.
 
 ## Code map (index.html)
 - `RAR`, `ECOL`, `CSS`, `PRICE`, `ROMANS`: data tables (rarity names, colours, sell values, cards with facts)
-- `req(t)`: speed needed to carry an egg of tier t (150 + 50*t)
+- `req(t)`: speed needed to carry an egg of tier t (`REQ` = 150, 220, 350, 600, 1000, 1600, 2500)
 - Scene setup: ground, temple (`BX`), treadmill (`TX`,`TZ`), Colosseum walls (`ACX`,`AR`, gate on the left)
 - `person()`: builds the blocky player and soldier models
 - `slots`: the 50 arena eggs, tier rises with distance from the gate. `BSLOT`: 6 base egg slots
