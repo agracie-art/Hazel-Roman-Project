@@ -54,6 +54,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 #a2hs{display:none;font-size:13px;font-weight:700;color:#2a2230;max-width:80vw}
 #labels .pop{position:absolute;left:0;top:0;font:900 20px "Courier New",monospace;color:#7cff8a;white-space:nowrap;text-shadow:2px 2px 0 #1b4a24,-2px -2px 0 #1b4a24,2px -2px 0 #1b4a24,-2px 2px 0 #1b4a24}
 #labels .pop.cash{color:#ffd34d;font-size:17px;text-shadow:2px 2px 0 #5a3a00,-1px -1px 0 #5a3a00,1px -1px 0 #5a3a00,-1px 1px 0 #5a3a00}
+#labels .pop.vipgain,#labels .pop.big.vipgain{font-size:calc(36px*var(--ui));background:linear-gradient(90deg,#ff3d7f,#ffd34d,#38e8ff,#a855ff,#ff3d7f);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;text-shadow:none;filter:drop-shadow(2px 2px 0 #2a2230) drop-shadow(0 0 7px #ffd34d);animation:rbs .6s linear infinite}
+#gain.vip{background:linear-gradient(90deg,#a855ff,#ff3d7f,#ffb000);color:#fff}
 #labels .pop.big{color:#ffd34d;font-size:28px;text-shadow:2px 2px 0 #5a3a00,-2px -2px 0 #5a3a00,2px -2px 0 #5a3a00,-2px 2px 0 #5a3a00}
 #banner{display:none;position:fixed;left:0;right:0;top:20%;text-align:center;z-index:9;pointer-events:none;font-weight:900;font-size:clamp(34px,15vh,100px);letter-spacing:3px;text-shadow:4px 4px 0 #2a2230,-3px -3px 0 #2a2230,3px -3px 0 #2a2230,-3px 3px 0 #2a2230}
 #banner.rb{background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(4px 4px 0 #2a2230);animation:rbs 1s linear infinite}
@@ -610,6 +612,7 @@ function sfx(name,a){const c=AU.ctx;if(!c||AU.muted||c.state!=='running')return;
   break}
  case 'unlock':[79,83,86,91].forEach((n,i)=>tone(b,t+i*.09,n,.4,'sine',.16));break;
  case 'drain':tone(b,t,72,1,'sawtooth',.18,{glide:-30,lp:1800,lpEnd:300});hit(b,t,.7,.18,500,5000);drum(b,t+.05,80,35,.5,.5);break
+ case 'vip100':[96,100,103,108].forEach((n,i)=>tone(b,t+i*.05,n,.3,'sine',.1));break
  case 'start':drum(b,t,90,45,.3,.6);tone(b,t,45,.4,'sawtooth',.14,{lp:700});break
  case 'ready':[72,76,79,84,88].forEach((n,i)=>tone(b,t+i*.07,n,.35,'triangle',.16));break
  case 'jump':tone(b,t,72,.14,'square',.05,{glide:7});break}}
@@ -671,13 +674,13 @@ function update(dt){
   upgSync(free&&zone&&cardWant&&!cardDismissed?zone:null)}
  vipTag.position.set(p.x,py+3.9,p.z);
  if(onTread){const g=curRate*dt;st.speed+=g;gainTotal+=g;gainIdle=0;
-  const f=Math.floor(st.speed);for(let k=lastF+1;k<=f;k++){if(curRate>NORMAL_RATE*3){if(k%10===0)pop('+10',true)}else{pop('+1');if(k%10===0)pop('+10!',true)}}lastF=f;
+  const f=Math.floor(st.speed);for(let k=lastF+1;k<=f;k++){if(curRate>NORMAL_RATE*3){if(k%100===0){pop('+100',true,undefined,undefined,undefined,'vipgain');sfx('vip100')}}else{pop('+1');if(k%10===0)pop('+10!',true)}}lastF=f;
   dust.forEach(d=>{if(d.t<=0&&Math.random()<.15){d.t=.5;d.m.position.set(p.x+(Math.random()-.5)*1.4,.3,p.z+1.2)}});hud()}
  else if(gainTotal>0){lastF=Math.floor(st.speed);gainIdle+=dt;if(gainIdle>2.5)gainTotal=0}
  dust.forEach(d=>{if(d.t>0){d.t-=dt;d.m.position.z+=dt*4;d.m.position.y+=dt*1.5;d.m.scale.setScalar(Math.max(.01,d.t*2));if(d.t<=0)d.m.position.y=-5}});
  const gE=$('gain');gE.style.display=gainTotal>0?'block':'none';
  if(gainTotal>0)gE.textContent='▲ +'+Math.floor(gainTotal)+' speed ('+(onTread?'+'+curRate+'/s':'stopped')+')';
- $('speed').classList.toggle('up',onTread);
+ $('speed').classList.toggle('up',onTread);$('gain').classList.toggle('vip',curRate===VIP_RATE);
  // pickup
  if(!p.carry&&!p.fling)for(const s of slots){if(s.alive&&Math.hypot(p.x-s.x,p.z-s.z)<1.15){s.alive=false;s.m.visible=false;s.timer=8;p.carry=s;sfx('pickup');sfx('pickup');
   p.mesh=makeEgg(s.t,true);p.mesh.position.set(0,2.5,0);player.add(p.mesh);

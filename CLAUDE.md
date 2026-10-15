@@ -60,3 +60,4 @@ with a real historical fact. Keep them or sell them for money.
 - Hatch animation is switched OFF for now (`HATCH_ANIM=false` in index.html): hatching goes straight to the Roman + fact popup. The wobble/crack/burst/Roman-reveal code (`FX`, `updateHatch`, `burst`) is kept; set the flag to true to bring it back
 - Depositing an egg drains the displayed speed (`speedDrain`/`dispSpeed`): number counts down, red fill drains in the Speed pill, red -N pop, falling sound. Real st.speed resets instantly
 - Responsive HUD: every HUD size uses `calc(Npx*var(--ui))`; `--ui` is set in resize() from the screen height (innerHeight/540, clamped .58-1.15). Joystick measures its own size. Tested at 11 sizes (568x320 up to 1366x1024) with all HUD pieces visible: no overlaps. Keep new HUD elements on this scale
+- VIP treadmill feedback: a big rainbow +100 (`.pop.vipgain`) every 100 speed instead of +1/+10, and the gain pill turns purple-orange (`#gain.vip`)
