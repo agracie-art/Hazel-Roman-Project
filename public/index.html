@@ -153,7 +153,7 @@ const st={money:0,speed:120,found:{}};
 try{Object.assign(st,JSON.parse(localStorage.getItem('reg-save')||'{}'))}catch(e){}
 const save=()=>{st.base=baseEggs.map(e=>({t:e.t,i:BSLOT.indexOf(e.q)}));try{localStorage.setItem('reg-save',JSON.stringify(st))}catch(e){}};
 st.baseLv=st.baseLv||0;st.speedBuys=st.speedBuys||0;st.vip=st.vip||0;
-const CAPS=[6,9,12,15,18],BASE_COST=[150,500,1500,4000],VIP_COST=1000,SPEED_STEP=20;
+const BASE_SPEED=120,CAPS=[6,9,12,15,18],BASE_COST=[150,500,1500,4000],VIP_COST=1000,SPEED_STEP=20;
 const cap=()=>CAPS[st.baseLv],speedCost=()=>50*(st.speedBuys+1);
 setInterval(save,2000);addEventListener('pagehide',save);
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
@@ -516,7 +516,10 @@ function update(dt){
  const nAlive=slots.reduce((n,s)=>n+(s.alive?1:0),0);if(nAlive!==lastEggs){lastEggs=nAlive;$('eggs').textContent='Eggs '+nAlive+'/68'}
  // deposit
  if(p.carry&&p.x<-9){if(baseEggs.length<cap()){const b=BSLOT.slice(0,cap()).find(q=>!baseEggs.some(e=>e.q===q));putBaseEgg(p.carry.t,b);
-  player.remove(p.mesh);p.carry.alive=false;p.carry.timer=8;p.carry=null;toast('Egg placed in your base. Walk up to it and tap Open egg to hatch it.')}else if(!p.warned){toast('Base is full. Open an egg first.');p.warned=1;setTimeout(()=>p.warned=0,3000)}}
+  player.remove(p.mesh);p.carry.alive=false;p.carry.timer=8;p.carry=null;
+  const was=Math.floor(st.speed),nb=BASE_SPEED+st.speedBuys*SPEED_STEP;st.speed=nb;lastF=nb;gainTotal=0;hud();save();
+  $('speed').animate([{transform:'scale(1)'},{transform:'scale(1.35)',background:'#c2364a',color:'#fff'},{transform:'scale(1)'}],{duration:700});
+  toast('Egg placed! Speed reset from '+was+' to '+nb+'. Tap the egg to hatch it.')}else if(!p.warned){toast('Base is full. Open an egg first.');p.warned=1;setTimeout(()=>p.warned=0,3000)}}
  // soldier
  so.cool-=dt;so.swing=Math.max(0,so.swing-dt);
  const chase=p.carry&&!p.fling&&p.x>ACX-AR&&so.cool<=0;
