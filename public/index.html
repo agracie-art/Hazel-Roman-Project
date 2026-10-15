@@ -29,6 +29,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #hudL{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-start;gap:8px}
 #snd{font-size:13px;padding:4px 10px}
+.lbl.etag{background:rgba(0,0,0,.78);text-align:center;min-width:76px;padding:3px 8px}
+.etm{font-size:14px}.etm.sm{font-size:11px;opacity:.85}.etm.ready{color:#7cff8a;animation:pulse .4s infinite alternate}
+.ebar{height:7px;background:#555;margin-top:3px}.ebar i{display:block;height:100%;background:#ffd34d}
 #inc{background:#2e9e45;color:#fff;font-size:13px;padding:3px 8px;display:none}
 #hudR{display:flex;flex-direction:column;gap:8px;align-items:flex-end;position:fixed;right:calc(10px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px))}
 #labels{position:fixed;inset:0;overflow:hidden;pointer-events:none}
@@ -171,7 +174,7 @@ const $=id=>document.getElementById(id);
 const st={money:0,speed:120,found:{}};
 try{Object.assign(st,JSON.parse(localStorage.getItem('reg-save')||'{}'))}catch(e){}
 let noSave=false;
-const save=()=>{if(noSave)return;st.base=baseEggs.map(e=>({t:e.t,i:BSLOT.indexOf(e.q)}));try{localStorage.setItem('reg-save',JSON.stringify(st))}catch(e){}};
+const save=()=>{if(noSave)return;st.base=baseEggs.map(e=>({t:e.t,i:BSLOT.indexOf(e.q),end:e.end||0}));try{localStorage.setItem('reg-save',JSON.stringify(st))}catch(e){}};
 st.baseLv=st.baseLv||0;st.speedBuys=st.speedBuys||0;st.vip=st.vip||0;
 const BASE_SPEED=120,CAPS=[6,9,12,15,18],BASE_COST=[150,500,1500,4000],VIP_COST=1000,SPEED_STEP=20;
 const cap=()=>CAPS[st.baseLv],speedCost=()=>50*(st.speedBuys+1);
@@ -324,8 +327,8 @@ function addWalker(name){const lk=LOOK[name]||{tunic:0x888888},m=person(Object.a
  const w={name,sc:lk.sc||1,m,tag,x:-24+(Math.random()-.5)*10,z:-4+(Math.random()-.5)*3,tx:0,tz:0,wait:Math.random()*2,h:2.9*(lk.sc||1)+.8,rate:rateOf(name),acc:0,cool:Math.random()*2};
  m.position.set(w.x,1,w.z);walkers.push(w);return w}
 const baseEggs=[],BSLOT=[...Array(18)].map((_,i)=>({x:-30+(i%6)*2.4,z:3.5+3.4*Math.floor(i/6)}));
-function putBaseEgg(t,q){const m=makeEgg(t);m.position.set(q.x,0,q.z);scene.add(m);baseEggs.push({t,m,q})}
-(st.base||[]).forEach(b=>{if(BSLOT[b.i])putBaseEgg(b.t,BSLOT[b.i])});
+function putBaseEgg(t,q){const m=makeEgg(t);m.position.set(q.x,0,q.z);scene.add(m);const e={t,m,q};baseEggs.push(e);return e}
+(st.base||[]).forEach(b=>{if(BSLOT[b.i]){const e=putBaseEgg(b.t,BSLOT[b.i]);if(b.end){e.end=b.end;e.state=Date.now()>=b.end?'ready':'incubating'}}});
 if(!st.kept)st.kept=[];st.kept.slice(0,14).forEach(addWalker);
 
 // ---------- state ----------
@@ -438,7 +441,7 @@ const bigArrow=(()=>{const g=new THREE.Group(),c=new THREE.Mesh(new THREE.ConeGe
  c.rotation.x=Math.PI;c.position.y=-1.1;g.add(c);g.userData.parts=[c,sh];g.visible=false;scene.add(g);return g})();
 function updateGuide(now){const mode=(p.fling||hatching)?null:p.carry?(p.x>-9?'home':null):(p.x<GXp+14?'eggs':null);
  // bouncing arrows over every egg waiting to be hatched in the base
- hatchArrows.forEach((a,i)=>{const e=baseEggs[i];a.visible=!!e&&!hatching;if(e)a.position.set(e.q.x,3.5+Math.abs(Math.sin(now/240+i))*.9,e.q.z)});
+ hatchArrows.forEach((a,i)=>{const e=baseEggs[i];a.visible=!!e&&!hatching&&e.state!=='incubating';if(e)a.position.set(e.q.x,3.5+Math.abs(Math.sin(now/240+i))*.9,e.q.z)});
  if(mode!==guideMode){guideMode=mode;if(mode){const c=mode==='eggs'?0xff5a36:0x2ecc71;[...guideArrows,headArrow,bigArrow].forEach(a=>a.userData.parts.forEach(m=>m.material.color.setHex(c)))}}
  bigArrow.visible=!!mode;headArrow.visible=false;if(!mode){guideArrows.forEach(a=>a.visible=false);return}
  const n=guideArrows.length,x0=-10,x1=GXp+9,fw=mode==='eggs';
@@ -449,7 +452,15 @@ function updateGuide(now){const mode=(p.fling||hatching)?null:p.carry?(p.x>-9?'h
  const tx=fw?GXp+3:(p.x>GXp?GXp-2:-13),tz=fw?0:(p.x>GXp?0:3),dx=tx-p.x,dz=tz-p.z;
  if(Math.hypot(dx,dz)>6){headArrow.visible=true;headArrow.rotation.y=Math.atan2(-dz,dx);headArrow.position.set(p.x,py+4.6+Math.abs(Math.sin(now/200))*.7,p.z)}}
 let hatching=null;
-function startHatch(e){if(!e||hatching||p.carry||p.fling)return;const pool=ROMANS.filter(r=>r[1]===e.t);
+// rarer eggs have to incubate first. The timer keeps running even when the game is closed
+const HATCH_WAIT=[0,5,15,30,60,120,240];
+const fmtT=sec=>{sec=Math.max(0,Math.ceil(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')};
+function removeLabel(o){if(!o)return;o.el.remove();const i=LBL.indexOf(o);if(i>=0)LBL.splice(i,1)}
+function startHatch(e){if(!e||hatching||p.carry||p.fling)return;
+ if(e.state==='incubating'){toast(RAR[e.t]+' egg is incubating. Ready in '+fmtT((e.end-Date.now())/1000));return}
+ if(e.state!=='ready'&&HATCH_WAIT[e.t]>0){e.state='incubating';e.end=Date.now()+HATCH_WAIT[e.t]*1000;sfx('start');save();toast(RAR[e.t]+' egg is incubating for '+fmtT(HATCH_WAIT[e.t])+'. It hatches when the timer ends!');return}
+ beginHatch(e)}
+function beginHatch(e){const pool=ROMANS.filter(r=>r[1]===e.t);
  hatching={e,r:pool[Math.floor(Math.random()*pool.length)],t:0,t2:0,stage:0,cracks:0,shell:[],m:null};$('open').style.display='none'}
 $('open').onclick=()=>startHatch(nearEgg);
 function showRoman(name){const r=ROMANS.find(q=>q[0]===name);if(!r)return;
@@ -527,7 +538,7 @@ function hatch(e,r){const price=PRICE[e.t]*5;
  const isNew=!st.found[r[0]],oldN=foundN();st.found[r[0]]=1;
  show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><p class="fact">Keep it and it earns you <b>${earnTxt(r[1])}</b>. Or sell it now for $${price}.</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
  if(isNew)unlockAnim(oldN,foundN(),r);
- const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud()};
+ const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);if(e.tag){removeLabel(e.tag);e.tag=null}baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud()};
  $('keep').onclick=()=>{st.kept.push(r[0]);if(walkers.length<14)addWalker(r[0]);toast(r[0]+' is now earning you $'+fmtR(INCOME[r[1]])+'/s');done()};
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
 
@@ -588,6 +599,8 @@ function sfx(name,a){const c=AU.ctx;if(!c||AU.muted||c.state!=='running')return;
   if(tr>=6){for(let i=0;i<10;i++)tone(b,t+.2+i*.07,84+i*2,.5,'sine',.1)}
   break}
  case 'unlock':[79,83,86,91].forEach((n,i)=>tone(b,t+i*.09,n,.4,'sine',.16));break;
+ case 'start':drum(b,t,90,45,.3,.6);tone(b,t,45,.4,'sawtooth',.14,{lp:700});break
+ case 'ready':[72,76,79,84,88].forEach((n,i)=>tone(b,t+i*.07,n,.35,'triangle',.16));break
  case 'jump':tone(b,t,72,.14,'square',.05,{glide:7});break}}
 function auSetMuted(v){AU.muted=v;try{localStorage.setItem('reg-mute',v?'1':'0')}catch(e){}if(AU.master)AU.master.gain.setTargetAtTime(v?0:.55,AU.ctx.currentTime,.05);$('snd').textContent=v?'♪ Off':'♪ On'}
 $('snd').onclick=()=>auSetMuted(!AU.muted);$('snd').textContent=AU.muted?'\u266A Off':'\u266A On';
@@ -678,6 +691,18 @@ function update(dt){
   const s=p.carry;player.remove(p.mesh);p.carry=null;s.timer=4;p.fling={t:0,x0:p.x,z0:p.z,x1:-18,z1:8};sfx('fling');toast('The Centurion flung you!')}
  // near egg in base
  nearEgg=null;for(const e of baseEggs)if(Math.hypot(p.x-e.q.x,p.z-e.q.z)<2.4)nearEgg=e;
+ {const nowMs=Date.now(),inBaseNow=p.x>-37&&p.x<-14&&p.z>-10&&p.z<14;
+  baseEggs.forEach((e,i)=>{const eg=e.m.children[0],wait=HATCH_WAIT[e.t];let html='',y=4.3;
+   if(e.state==='incubating'){const left=(e.end-nowMs)/1000,pct=Math.min(1,1-left/wait);
+    if(left<=0){e.state='ready';sfx('ready');save()}
+    else{html=`<div class="etm">\u23F3 ${fmtT(left)}</div><div class="ebar"><i style="width:${(pct*100).toFixed(0)}%"></i></div>`;
+     if(!hatching||hatching.e!==e){e.m.rotation.z=Math.sin(nowMs/180+i)*.04*(1+pct*2);const g=(.08+.3*pct)*(.6+.4*Math.sin(nowMs/260));eg.material.emissive.setRGB(g,g*.9,g*.5)}}}
+   if(e.state==='ready'&&(!hatching||hatching.e!==e)){html='<div class="etm ready">READY! TAP</div>';y=5.2;e.m.rotation.z=Math.sin(nowMs/90)*.09;const g=.35+.3*Math.sin(nowMs/150);eg.material.emissive.setRGB(g,g,g*.5);
+    if(!hatching&&!p.carry&&!p.fling&&inBaseNow&&!adOpen)beginHatch(e)}
+   if(!e.state&&wait>0){html=`<div class="etm sm">${fmtT(wait)} to hatch</div>`;y=4.1}
+   if(html){if(!e.tag){e.tag=label('',e.q.x,y,e.q.z);e.tag.el.className+=' etag'}e.tag.position.set(e.q.x,y,e.q.z);if(e.tagHtml!==html){e.tagHtml=html;e.tag.el.innerHTML=html}}
+   else if(e.tag){removeLabel(e.tag);e.tag=null;e.tagHtml=''}});
+  if(nearEgg){const w=HATCH_WAIT[nearEgg.t];$('open').textContent=nearEgg.state==='incubating'?'Ready in '+fmtT((nearEgg.end-nowMs)/1000):(nearEgg.state==='ready'||!w)?'Open egg':'Start hatching ('+fmtT(w)+')'}}
  $('open').style.display=nearEgg&&!p.carry&&!hatching&&!p.fling?'block':'none';
  // hint
  updateGuide(now);
