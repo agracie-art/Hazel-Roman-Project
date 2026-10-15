@@ -1,5 +1,6 @@
 {
   "name": "hazel-roman-project",
   "compatibility_date": "2025-09-01",
-  "assets": { "directory": "./public" }
+  "assets": { "directory": "./public" },
+  "previews": {}
 }
