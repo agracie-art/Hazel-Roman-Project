@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roman egg grab</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --panel:#fbf6ea;--ink:#2a2230;--gold:#b8921e;--purple:#5b1e4a;--muted:#6d6474;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--panel:#241e2b;--ink:#f0ebf3;--gold:#e0b84a;--purple:#d79bc4;--muted:#a79db0}}
+:root[data-theme="dark"]{--panel:#241e2b;--ink:#f0ebf3;--gold:#e0b84a;--purple:#d79bc4;--muted:#a79db0}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#8ecae6;overflow:hidden;font-family:"Courier New",monospace;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.pill,.btn{background:var(--panel);color:var(--ink);border:3px solid #2a2230;padding:6px 10px;font:700 15px "Courier New",monospace;box-shadow:3px 3px 0 #2a2230}
+.btn{cursor:pointer}.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #2a2230}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#hudL{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
+#hudR{position:fixed;right:calc(10px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px))}
+#toast{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:44vw;text-align:center;font-size:14px;display:none}
+#open{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));display:none;font-size:18px;padding:12px 18px}
+#stick{position:fixed;left:0;bottom:0;width:45vw;height:60vh}
+#base{position:absolute;left:calc(28px + env(safe-area-inset-left,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));width:96px;height:96px;border-radius:50%;border:3px solid #2a2230;background:rgba(251,246,234,.35)}
+#thumb{position:absolute;left:28px;top:28px;width:40px;height:40px;border-radius:50%;background:var(--panel);border:3px solid #2a2230}
+dialog{border:3px solid #2a2230;background:var(--panel);color:var(--ink);width:min(440px,92vw);max-height:84vh;overflow:auto;padding:14px;box-shadow:5px 5px 0 #2a2230;font-family:"Courier New",monospace}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:8px 0;border-top:2px dashed var(--muted)}
+.fact{font-size:13px;color:var(--muted);margin-top:2px}
+.tag{font-size:12px;font-weight:700;color:#fff;padding:2px 8px;white-space:nowrap}
+.acts{display:flex;gap:8px;margin-top:12px}.acts .btn{flex:1}
+#rotate{position:fixed;inset:0;background:rgba(20,15,25,.92);color:#fff;display:none;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:9;font-size:18px}
+@media (orientation:portrait){#rotate.on{display:flex}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hudL"><div class="pill" id="money">$0</div><div class="pill" id="speed">Speed 120</div></div>
+<div id="hudR"><button class="btn" id="facts">Facts</button></div>
+<div class="pill" id="toast"></div>
+<div id="stick"><div id="base"><div id="thumb"></div></div></div>
+<button class="btn" id="open">Open egg</button>
+<dialog id="dlg"><div id="dlgBody"></div></dialog>
+<div id="rotate" class="on"><div>Turn your phone sideways to play</div><button class="btn" id="rotOk">Play anyway</button></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const RAR=['Common','Uncommon','Rare','Epic','Legendary','Mythic','Secret'];
+const ECOL=[0x9a9a9a,0x4caf50,0x3d8bd9,0x9c4fd0,0xe8a020,0xd23a52,0x222222];
+const CSS=['#8a8a8a','#3f8a4a','#2f6fb5','#8a3fb5','#c9861a','#c2364a','#111'];
+const PRICE=[1,3,8,20,50,120,300];
+const req=t=>100+t*30;
+const ROMANS=[
+["Peasant",0,"Britain used to be called Britannia."],
+["Slave",0,"Most slaves were people from places Rome had invaded."],
+["Soldier",1,"If you were a strong person from a country Rome had invaded, you had to join the Roman army."],
+["Gladiator",1,"The gladiators used so many lions that there are no more lions in North Africa today!"],
+["Tax Collector",2,"When Rome got bigger, the rich got richer but the poor Romans got poorer."],
+["Celt",2,"Some Celts painted their faces with berries."],
+["Lion Tamer",3,"Gladiators fought lions to become Roman citizens from the emperor."],
+["Governor",3,"A governor was the best job you could get apart from the emperor."],
+["Julius Caesar",4,"Julius Caesar was the first emperor to have his face put on coins."],
+["Emperor Nero",4,"Emperor Nero nearly lost Britain when he was emperor."],
+["Boudicca",5,"When Prasutagus died, the Romans kicked Boudicca out of her house."],
+["Prasutagus",5,"He was allies with the Romans, but when he died they kicked Boudicca out of her house."],
+["Jupiter",6,"He was the most powerful god."],
+["Juno",6,"She was Jupiter's wife and she was the most powerful goddess."]];
+const $=id=>document.getElementById(id);
+const st={money:0,speed:120,found:{}};
+
+// ---------- scene ----------
+const canvas=$('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:false});
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x8ecae6);
+const camera=new THREE.PerspectiveCamera(45,16/9,.1,200);
+function resize(){const h=190,w=Math.round(h*innerWidth/innerHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+scene.add(new THREE.AmbientLight(0xffffff,.75));
+const sun=new THREE.DirectionalLight(0xffffff,.7);sun.position.set(10,20,8);scene.add(sun);
+const M=c=>new THREE.MeshLambertMaterial({color:c,flatShading:true});
+function box(w,h,d,c,x,y,z,par){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);(par||scene).add(m);return m}
+function label(t,x,y,z){const c=document.createElement('canvas');c.width=128;c.height=32;const g=c.getContext('2d');g.fillStyle='rgba(0,0,0,.65)';g.fillRect(0,0,128,32);g.fillStyle='#fff';g.font='bold 18px monospace';g.textAlign='center';g.fillText(t,64,22);const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx}));s.scale.set(6,1.5,1);s.position.set(x,y,z);scene.add(s)}
+
+// ground
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(160,70),M(0xd8c79a));ground.rotation.x=-Math.PI/2;scene.add(ground);
+const pave=new THREE.Mesh(new THREE.PlaneGeometry(26,24),M(0xcfc8ba));pave.rotation.x=-Math.PI/2;pave.position.set(-24,.02,0);scene.add(pave);
+const ACX=24,AR=18;
+const floor=new THREE.Mesh(new THREE.CircleGeometry(AR,28),M(0xc9aa6c));floor.rotation.x=-Math.PI/2;floor.position.set(ACX,.03,0);scene.add(floor);
+
+// temple (your base)
+const BX=-24;
+box(16,1,8,0xe8e2d4,BX,.5,-4);
+[-6,-3.6,-1.2,1.2,3.6,6].forEach(dx=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,4,6),M(0xf4f0e6));c.position.set(BX+dx,3,-1);scene.add(c)});
+box(9,4,3,0xd8d0be,BX,3,-6);
+box(15,.7,7.5,0xf4f0e6,BX,5.35,-3.8);
+const roof=new THREE.Mesh(new THREE.ConeGeometry(5,2.4,4),M(0x8c3b2a));roof.rotation.y=Math.PI/4;roof.scale.set(1.5,1,.8);roof.position.set(BX,6.9,-3.8);scene.add(roof);
+box(1.4,2.4,.3,0x5b1e4a,BX,2.2,-4.45);
+label('Your base',BX,9.6,-3.5);
+
+// treadmill
+const TX=-14,TZ=6;
+box(2.6,.35,4,0x333333,TX,.2,TZ);
+const belt=[];for(let i=0;i<5;i++)belt.push(box(2.2,.1,.3,0xffd34d,TX,.42,TZ-1.6+i*.8));
+label('Treadmill',TX,3.2,TZ);
+
+// colosseum walls
+const walls=[];
+for(let i=0;i<28;i++){const a=i*Math.PI*2/28;if(Math.abs(a-Math.PI)<.15)continue;
+ const x=ACX+AR*Math.cos(a),z=AR*Math.sin(a);
+ const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=-a+Math.PI/2;scene.add(g);
+ box(4.3,3.2,1.8,0xdccda4,0,1.6,0,g);box(4.3,2.2,1.8,0xc7b78a,0,4.3,0,g);box(1.2,1.6,.2,0x5a4a30,0,1.3,.95,g);box(1.2,1.2,.2,0x5a4a30,0,4.2,.95,g);
+ walls.push({x,z})}
+label('Colosseum',ACX-AR,7.5,0);
+
+// player
+function person(skin,tunic,hair,helmet){const g=new THREE.Group();
+ box(.9,1.1,.55,tunic,0,1.1,0,g);box(.65,.65,.65,skin,0,2.05,0,g);
+ box(.2,.7,.2,skin,-.6,1.1,0,g);box(.2,.7,.2,skin,.6,1.1,0,g);
+ const l=box(.28,.6,.28,0x6b4a2a,-.2,.3,0,g),r=box(.28,.6,.28,0x6b4a2a,.2,.3,0,g);
+ if(hair){box(.75,.75,.25,hair,0,1.9,-.3,g);box(.7,.2,.7,hair,0,2.45,0,g)}
+ if(helmet){box(.8,.3,.8,0xb88a2a,0,2.5,0,g);box(.15,.4,.9,0xc2364a,0,2.8,0,g)}
+ g.userData={l,r};scene.add(g);return g}
+const player=person(0xf0c8a0,0x3d8bd9,0x5a3a1a,false);
+const sol=person(0xe0b088,0xb02a2a,null,true);sol.scale.setScalar(1.7);
+const shield=box(.2,1.2,.8,0xb02a2a,.75,1.2,0,sol);box(.25,.25,.25,0xffd34d,.88,1.2,0,sol);
+const sword=box(.1,.1,1.5,0xd8d8d8,-.75,1.1,.7,sol);
+
+// eggs
+function makeEgg(t,small){const g=new THREE.Group();const k=(.55+.1*t)*(small?.8:1);
+ const m=new THREE.Mesh(new THREE.SphereGeometry(1,8,6),M(ECOL[t]));m.scale.set(k,k*1.35,k);m.position.y=k*1.35;g.add(m);
+ box(.3*k+.15,.3*k+.15,.2,0xffffff,0,k*1.5,k*.95,g);return g}
+const slots=[];
+for(let i=0;i<18;i++){const d=i/17,t=Math.min(6,Math.floor(d*7));
+ const x=ACX-12+d*25,rz=Math.sqrt(Math.max(0,14*14-(x-ACX)**2));
+ const z=(Math.random()-.5)*1.8*rz;
+ const m=makeEgg(t);m.position.set(x,0,z);scene.add(m);slots.push({t,x,z,m,alive:true,timer:0})}
+const baseEggs=[],BSLOT=[...Array(6)].map((_,i)=>({x:-30+i*2.4,z:3.5}));
+
+// ---------- state ----------
+const p={x:-22,z:6,carry:null,mesh:null};
+const so={x:ACX,z:0,tx:ACX,tz:0,cool:0,swing:0};
+const joy={x:0,y:0},keys={};
+let toastT;
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>e.style.display='none',3200)}
+function hud(){$('money').textContent='$'+st.money;$('speed').textContent='Speed '+Math.floor(st.speed)}
+
+// input
+const stick=$('stick'),thumb=$('thumb'),baseEl=$('base');let sid=null,cx0=0,cy0=0;
+stick.addEventListener('pointerdown',e=>{sid=e.pointerId;stick.setPointerCapture(sid);const r=baseEl.getBoundingClientRect();cx0=r.left+48;cy0=r.top+48;mv(e)});
+stick.addEventListener('pointermove',e=>{if(e.pointerId===sid)mv(e)});
+const endj=e=>{if(e.pointerId===sid){sid=null;joy.x=joy.y=0;thumb.style.transform=''}};
+stick.addEventListener('pointerup',endj);stick.addEventListener('pointercancel',endj);
+function mv(e){let dx=e.clientX-cx0,dy=e.clientY-cy0;const l=Math.hypot(dx,dy),R=48;if(l>R){dx*=R/l;dy*=R/l}joy.x=dx/R;joy.y=dy/R;thumb.style.transform=`translate(${dx}px,${dy}px)`}
+addEventListener('keydown',e=>keys[e.key.toLowerCase()]=1);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+$('rotOk').onclick=()=>$('rotate').classList.remove('on');
+function lock(){if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{})}
+
+// dialogs
+const dlg=$('dlg');
+function show(h){$('dlgBody').innerHTML=h;dlg.showModal()}
+$('facts').onclick=()=>{show('<h3>Facts</h3>'+ROMANS.map(r=>{const f=st.found[r[0]];return `<div class="row"><div><b>${f?r[0]:'???'}</b><div class="fact">${f?r[2]:'Hatch this Roman to unlock their fact.'}</div></div><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span></div>`}).join('')+'<div class="acts"><button class="btn" id="x">Close</button></div>');$('x').onclick=()=>dlg.close()};
+let nearEgg=null;
+$('open').onclick=()=>{if(!nearEgg)return;const e=nearEgg,pool=ROMANS.filter(r=>r[1]===e.t),r=pool[Math.floor(Math.random()*pool.length)],price=PRICE[e.t]*5;
+ st.found[r[0]]=1;
+ show(`<h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
+ const done=()=>{scene.remove(e.m);baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud()};
+ $('keep').onclick=()=>{toast(r[0]+' added to your base');done()};
+ $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}};
+
+// ---------- loop ----------
+function update(dt){
+ let ix=joy.x+((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0);
+ let iz=joy.y+((keys.s||keys.arrowdown)?1:0)-((keys.w||keys.arrowup)?1:0);
+ const l=Math.hypot(ix,iz);if(l>1){ix/=l;iz/=l}
+ const mul=p.carry?Math.max(.2,Math.min(1,st.speed/req(p.carry.t))):1;
+ const v=4.4*mul;
+ p.x=Math.max(-36,Math.min(46,p.x+ix*v*dt));p.z=Math.max(-22,Math.min(22,p.z+iz*v*dt));
+ for(const w of walls){const dx=p.x-w.x,dz=p.z-w.z,d=Math.hypot(dx,dz);if(d<2.9){p.x=w.x+dx/d*2.9;p.z=w.z+dz/d*2.9}}
+ if(l>.1)player.rotation.y=Math.atan2(ix,iz);
+ const t=performance.now()/120;
+ player.userData.l.position.z=Math.sin(t)*.25*l;player.userData.r.position.z=-Math.sin(t)*.25*l;
+ player.position.set(p.x,0,p.z);
+ // treadmill
+ if(Math.hypot(p.x-TX,p.z-TZ)<2.3&&!p.carry){st.speed+=6*dt;belt.forEach((b,i)=>b.position.z=TZ-1.6+((i*.8+performance.now()/200)%4));hud()}
+ // pickup
+ if(!p.carry)for(const s of slots){if(s.alive&&Math.hypot(p.x-s.x,p.z-s.z)<1.5){s.alive=false;s.m.visible=false;s.timer=8;p.carry=s;
+  p.mesh=makeEgg(s.t,true);p.mesh.position.set(0,2.5,0);player.add(p.mesh);
+  toast(`${RAR[s.t]} egg. Needs speed ${req(s.t)}, you have ${Math.floor(st.speed)}. Run to your base!`);break}}
+ for(const s of slots)if(!s.alive&&s!==p.carry){s.timer-=dt;if(s.timer<=0){s.alive=true;s.m.visible=true}}
+ // deposit
+ if(p.carry&&p.x<-9){if(baseEggs.length<6){const b=BSLOT.find(q=>!baseEggs.some(e=>e.q===q)),m=makeEgg(p.carry.t);m.position.set(b.x,0,b.z);scene.add(m);baseEggs.push({t:p.carry.t,m,q:b});
+  player.remove(p.mesh);p.carry.alive=false;p.carry.timer=8;p.carry=null;toast('Egg placed in your base. Walk up to it to open it.')}else if(!p.warned){toast('Base is full. Open an egg first.');p.warned=1;setTimeout(()=>p.warned=0,3000)}}
+ // soldier
+ so.cool-=dt;so.swing=Math.max(0,so.swing-dt);
+ const chase=p.carry&&p.x>ACX-AR&&so.cool<=0;
+ if(chase){so.tx=p.x;so.tz=p.z}else if(Math.hypot(so.x-so.tx,so.z-so.tz)<.8){const a=Math.random()*6.28,r=Math.random()*12;so.tx=ACX+Math.cos(a)*r;so.tz=Math.sin(a)*r}
+ const dx=so.tx-so.x,dz=so.tz-so.z,dd=Math.hypot(dx,dz)||1,sv=chase?3.3:1.8;
+ so.x+=dx/dd*sv*dt;so.z+=dz/dd*sv*dt;sol.position.set(so.x,0,so.z);sol.rotation.y=Math.atan2(dx,dz);
+ sword.rotation.x=so.swing>0?-1.2:0;
+ if(chase&&Math.hypot(p.x-so.x,p.z-so.z)<2.4){so.swing=.5;so.cool=2.5;so.tx=ACX;so.tz=0;
+  const s=p.carry;player.remove(p.mesh);p.carry=null;s.timer=4;p.x=-18;p.z=8;toast('Kicked back to your base! Get speed, then try a lighter egg.')}
+ // near egg in base
+ nearEgg=null;for(const e of baseEggs)if(Math.hypot(p.x-e.q.x,p.z-e.q.z)<2.4)nearEgg=e;
+ $('open').style.display=nearEgg&&!p.carry?'block':'none';
+ // camera
+ camera.position.lerp(new THREE.Vector3(p.x,15,p.z+13),.1);camera.lookAt(camera.position.x,0,camera.position.z-11);
+}
+let last=performance.now();
+function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(!dlg.open)update(dt);renderer.render(scene,camera)}
+camera.position.set(p.x,15,p.z+13);
+document.body.addEventListener('pointerdown',lock,{once:true});
+hud();requestAnimationFrame(tick);
+toast('Stand on the treadmill for speed. Then grab an egg from the Colosseum!');
+</script>
+</body>
+</html>
