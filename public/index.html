@@ -381,33 +381,40 @@ addEventListener('keydown',e=>{if(e.key===' ')jump();if(e.key==='+'||e.key==='='
 // ---- Watch to Earn: cash ticks up the longer you watch, and the rate steps up. Total watch time also unlocks VIP free
 const AD_TIERS=[[0,2.5],[20,3],[60,4],[120,5],[180,6]]; // [from second, $ per second]
 const AD_MIN=20,AD_COOL=60,VIP_AD_SECS=300; // close button after 20s, 60s cooldown, VIP free after 5 min of total viewing
-let pendingBuy=null,adOpen=false,adNext=0,adFail=false,adPaid=false,adWatch=0,adLast=0,adGiven=0,adTier=0,adTimer=null,adPopAcc=0,adVipNow=false;const adv=$('advid');
+let pendingBuy=null,adOpen=false,adNext=0,adFail=false,adPaid=false,adWatch=0,adLast=0,adGiven=0,adTier=0,adTimer=null,adPopAcc=0,adVipNow=false,adMode='earn',adEgg=null,adCut=0;const SPEEDUP=6; // watching speeds a hatching egg up this many times
+const adv=$('advid');
 const adEarned=sec=>{let t=0;for(let i=0;i<AD_TIERS.length;i++){const a=AD_TIERS[i][0],b=i+1<AD_TIERS.length?AD_TIERS[i+1][0]:1e9;if(sec>a)t+=(Math.min(sec,b)-a)*AD_TIERS[i][1]}return t};
 const adTierAt=sec=>{let k=0;AD_TIERS.forEach((t,i)=>{if(sec>=t[0])k=i});return k},fmtD=v=>v%1?v.toFixed(1):String(v);
 function adTxt(){const t=$('adtxt');
  if(adFail){t.textContent='Video would not load';$('adx').style.display='block';return}
- const e=Math.floor(adEarned(adWatch)),r=AD_TIERS[adTierAt(adWatch)][1],nx=AD_TIERS[adTierAt(adWatch)+1];
+ if(adMode==='speed'&&adEgg){const left=(adEgg.end-Date.now())/1000;
+  t.innerHTML=adEgg.state==='ready'?'<b>\u2605 EGG READY! \u2605</b><br><small>Close this to hatch it</small>':`<b>HATCHING IN ${fmtT(left)}</b> <small>${SPEEDUP}x faster</small><br><small>${RAR[adEgg.t]} egg \u00B7 keep watching to speed it up</small>`}
+ else{const e=Math.floor(adEarned(adWatch)),r=AD_TIERS[adTierAt(adWatch)][1],nx=AD_TIERS[adTierAt(adWatch)+1];
  const sub=!adPaid?'You can close in '+Math.max(1,Math.ceil(AD_MIN-adWatch))+'s':nx?'Rate goes up to $'+fmtD(nx[1])+'/s in '+Math.max(1,Math.ceil(nx[0]-adWatch))+'s':'MAX rate! Keep watching';
- t.innerHTML=`<b>EARNED $${e}</b> <small>+$${fmtD(r)}/s</small><br><small>${sub}</small>`;
+ t.innerHTML=`<b>EARNED $${e}</b> <small>+$${fmtD(r)}/s</small><br><small>${sub}</small>`}
  const v=$('advip');if(st.vip&&!adVipNow){v.style.display='none'}else{v.style.display='block';
   const have=Math.min(VIP_AD_SECS,st.adSecs||0);v.innerHTML=adVipNow?'★ VIP UNLOCKED! ★':`★ Free VIP: ${fmtT(have)} / ${fmtT(VIP_AD_SECS)}<span class="vbar"><i style="width:${(have/VIP_AD_SECS*100).toFixed(0)}%"></i></span>`;v.classList.toggle('done',adVipNow)}}
 function adPop(txt){const p=document.createElement('div');p.className='adpop';p.textContent=txt;p.style.left=(42+Math.random()*16)+'%';$('adbox').appendChild(p);
  p.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-90px)',opacity:0}],{duration:1000,easing:'ease-out'}).onfinish=()=>p.remove()}
 function adTick(){if(!adOpen||adFail)return;
- const cur=adv.currentTime,d=cur-adLast;adLast=cur;if(d>0&&d<1&&!adv.paused){adWatch+=d;st.adSecs=(st.adSecs||0)+d}
- const due=Math.floor(adEarned(adWatch))-adGiven;
+ const cur=adv.currentTime,d=cur-adLast;adLast=cur;let dw=0;if(d>0&&d<1&&!adv.paused){dw=d;adWatch+=d;st.adSecs=(st.adSecs||0)+d}
+ if(adMode==='speed'&&adEgg){
+  if(dw>0&&adEgg.state==='incubating'){const cut=dw*(SPEEDUP-1);adEgg.end-=cut*1000;adCut+=cut;if(adCut>=10){adCut-=10;adPop('-10s hatch time')}
+   if(Date.now()>=adEgg.end){adEgg.state='ready';sfx('ready');save()}}}
+ const due=adMode==='speed'?0:Math.floor(adEarned(adWatch))-adGiven;
  if(due>0){adGiven+=due;st.money+=due;adPopAcc+=due;while(adPopAcc>=10){adPopAcc-=10;adPop('+$10')};hud()}
- const k=adTierAt(adWatch);if(k>adTier){adTier=k;sfx('vip100');$('adtxt').animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:500});adPop('RATE UP! $'+fmtD(AD_TIERS[k][1])+'/s')}
- if(!adPaid&&adWatch>=AD_MIN){adPaid=true;sfx('buy');$('adx').style.display='block';$('adtxt').classList.add('paid')}
+ const k=adMode==='speed'?0:adTierAt(adWatch);if(k>adTier){adTier=k;sfx('vip100');$('adtxt').animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:500});adPop('RATE UP! $'+fmtD(AD_TIERS[k][1])+'/s')}
+ if(adMode==='earn'&&!adPaid&&adWatch>=AD_MIN){adPaid=true;sfx('buy');$('adx').style.display='block';$('adtxt').classList.add('paid')}
  if(!st.vip&&(st.adSecs||0)>=VIP_AD_SECS){st.vip=1;applyVip();adVipNow=true;sfx('buy');save()}
  adTxt()}
 function adLabel(){const w=Date.now()<adNext;$('adlbl').textContent=w?'Ad in '+Math.ceil((adNext-Date.now())/1000)+'s':'WATCH TO EARN';$('ad').disabled=w}
 setInterval(adLabel,500);
-function adStart(){if(Date.now()<adNext||adOpen)return;adOpen=true;adFail=adPaid=adVipNow=false;adWatch=adLast=adGiven=adTier=adPopAcc=0;$('adx').style.display='none';$('adtxt').classList.remove('paid');$('adbox').style.display='block';adv.src='ad.mp4';adTxt();adv.play().catch(()=>{});clearInterval(adTimer);adTimer=setInterval(adTick,100)}
-$('ad').onclick=adStart;
+function adStart(egg){egg=(egg&&egg.m)?egg:null;if(adOpen||(!egg&&Date.now()<adNext))return;adMode=egg?'speed':'earn';adEgg=egg;adCut=0;adOpen=true;adFail=adPaid=adVipNow=false;adWatch=adLast=adGiven=adTier=adPopAcc=0;$('adx').style.display=egg?'block':'none';$('adtxt').classList.remove('paid');$('adbox').style.display='block';adv.src='ad.mp4';adTxt();adv.play().catch(()=>{});clearInterval(adTimer);adTimer=setInterval(adTick,100)}
+$('ad').onclick=()=>adStart();
 adv.addEventListener('error',()=>{adFail=true;adTxt()});
 function adClose(){clearInterval(adTimer);adv.pause();adv.removeAttribute('src');adv.load();$('adbox').style.display='none';adOpen=false;last=performance.now();save();
  if(adGiven>0){adNext=Date.now()+AD_COOL*1000;toast('Thanks for watching! +$'+adGiven+(adVipNow?'  and VIP unlocked!':''))}
+ if(adMode==='speed'&&adEgg){const e=adEgg;toast(e.state==='ready'?'Egg ready! Tap it to hatch.':'Hatch sped up. '+fmtT((e.end-Date.now())/1000)+' left.');adEgg=null}
  hud();adLabel();const pb=pendingBuy;pendingBuy=null;if(adGiven>0&&pb)setTimeout(pb,250)}
 $('adx').onclick=adClose;
 addEventListener('keydown',e=>{if(e.key==='Escape'&&adOpen&&$('adx').style.display==='block')adClose()});
@@ -497,8 +504,11 @@ let hatching=null;
 const HATCH_WAIT=[0,5,15,30,60,120,240];
 const fmtT=sec=>{sec=Math.max(0,Math.ceil(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')};
 function removeLabel(o){if(!o)return;o.el.remove();const i=LBL.indexOf(o);if(i>=0)LBL.splice(i,1)}
+function speedDialog(e){const left=(e.end-Date.now())/1000;
+ show(`<h3>${RAR[e.t]} egg is incubating</h3><p>Ready in <b>${fmtT(left)}</b>.</p><p class="fact">Watch Roman News and your egg hatches <b>${SPEEDUP}x faster</b> while you watch.</p><div class="acts"><button class="btn adbtn" id="spdad">\u25B6 WATCH TO SPEED UP</button></div><div class="acts"><button class="btn" id="spdx">Keep waiting</button></div>`);
+ $('spdx').onclick=()=>dlg.close();$('spdad').onclick=()=>{dlg.close();adStart(e)}}
 function startHatch(e){if(!e||hatching||p.carry||p.fling)return;
- if(e.state==='incubating'){toast(RAR[e.t]+' egg is incubating. Ready in '+fmtT((e.end-Date.now())/1000));return}
+ if(e.state==='incubating'){speedDialog(e);return}
  if(e.state!=='ready'&&HATCH_WAIT[e.t]>0){e.state='incubating';e.end=Date.now()+HATCH_WAIT[e.t]*1000;sfx('start');save();toast(RAR[e.t]+' egg is incubating for '+fmtT(HATCH_WAIT[e.t])+'. It hatches when the timer ends!');return}
  beginHatch(e)}
 const HATCH_ANIM=false; // set to true to bring back the wobble / crack / burst / Roman-reveal sequence
@@ -744,7 +754,7 @@ function update(dt){
   baseEggs.forEach((e,i)=>{const eg=e.m.children[0],wait=HATCH_WAIT[e.t];let html='',y=4.3;
    if(e.state==='incubating'){const left=(e.end-nowMs)/1000,pct=Math.min(1,1-left/wait);
     if(left<=0){e.state='ready';sfx('ready');save()}
-    else{html=`<div class="etm">\u23F3 ${fmtT(left)}</div><div class="ebar"><i style="width:${(pct*100).toFixed(0)}%"></i></div>`;
+    else{html=`<div class="etm">\u23F3 ${fmtT(left)}</div><div class="ebar"><i style="width:${(pct*100).toFixed(0)}%"></i></div><div class="etm sm">tap to speed up</div>`;
      if(!hatching||hatching.e!==e){e.m.rotation.z=Math.sin(nowMs/180+i)*.04*(1+pct*2);const g=(.08+.3*pct)*(.6+.4*Math.sin(nowMs/260));eg.material.emissive.setRGB(g,g*.9,g*.5)}}}
    if(e.state==='ready'&&(!hatching||hatching.e!==e)){html='<div class="etm ready">READY! TAP</div>';y=5.2;e.m.rotation.z=Math.sin(nowMs/90)*.09;const g=.35+.3*Math.sin(nowMs/150);eg.material.emissive.setRGB(g,g,g*.5);}
    if(!e.state&&wait>0){html=`<div class="etm sm">${fmtT(wait)} to hatch</div>`;y=4.1}
