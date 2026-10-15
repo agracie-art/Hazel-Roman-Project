@@ -29,7 +29,7 @@ with a real historical fact. Keep them or sell them for money.
 - Player walk speed 7 times carry multiplier `clamp(speed / req(tier), .2, 1)`
 - Soldier (Centurion) patrol 2.5, chase 5.2, kick range 2.4, cooldown 2.5s. A kick flings you in an arc back to the base (1.3s)
 - Treadmill gives +6 speed per second (player runs in place, speed pill turns green, HUD shows total gained). Start speed 120
-- 50 arena eggs: 14/11/9/7/5/3/1 for tiers 0-6, tier rises with distance from the gate. Base eggs are saved
+- 50 arena eggs: 11/11/7/6/5/5/5 for tiers 0-6, tier rises with distance from the gate. Base eggs are saved
 - Egg respawn 8s (4s after a kick). Sell price is PRICE[tier] * 5
 
 ## Known gaps and ideas (not built yet)

@@ -272,7 +272,7 @@ const solLabel=label('Centurion',0,0,0);
 function makeEgg(t,small){const g=new THREE.Group();const k=(.65+.08*t)*(small?.7:1);
  const m=new THREE.Mesh(new THREE.SphereGeometry(1,8,6),M(ECOL[t]));m.scale.set(k,k*1.35,k);m.position.y=k*1.35;g.add(m);
  box(.3*k+.15,.3*k+.15,.2,0xffffff,0,k*1.5,k*.95,g);return g}
-const TIERN=[14,11,9,7,5,3,1],EGGN=TIERN.reduce((a,b)=>a+b,0); // 50 eggs in the arena, rarity only loosely follows distance from the gate
+const TIERN=[11,11,7,6,5,5,5],EGGN=TIERN.reduce((a,b)=>a+b,0); // 50 eggs in the arena, rarity only loosely follows distance from the gate
 const pts=[];
 const ER=AR-4,GX=ACX-AR,gauss=()=>(Math.random()+Math.random()+Math.random()-1.5)*1.15;
 // loose random clumps with open gaps, a clear lane just inside the gate, and mixed rarities
