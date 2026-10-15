@@ -115,7 +115,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <button class="btn" id="vipPrompt">★ VIP ONLY! Tap to buy VIP</button>
 <div id="unlock" popover="manual"></div>
 <div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span></div></div>
-<div id="hudL"><div id="moneyRow"><div class="pill" id="money">$0</div><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD +$50</span></button></div><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 68</div></div>
+<div id="hudL"><div id="moneyRow"><div class="pill" id="money">$0</div><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD +$50</span></button></div><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 50</div></div>
 <div id="hudR"><button class="btn" id="facts">Facts</button><button class="btn" id="shop">Shop</button><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
 <div class="pill" id="toast"></div>
 <div class="pill" id="hint"></div>
@@ -272,16 +272,16 @@ const solLabel=label('Centurion',0,0,0);
 function makeEgg(t,small){const g=new THREE.Group();const k=(.65+.08*t)*(small?.7:1);
  const m=new THREE.Mesh(new THREE.SphereGeometry(1,8,6),M(ECOL[t]));m.scale.set(k,k*1.35,k);m.position.y=k*1.35;g.add(m);
  box(.3*k+.15,.3*k+.15,.2,0xffffff,0,k*1.5,k*.95,g);return g}
-const TIERN=[16,14,12,10,8,5,3]; // 68 eggs in the arena, tier rises with distance from the gate
+const TIERN=[14,11,9,7,5,3,1],EGGN=TIERN.reduce((a,b)=>a+b,0); // 50 eggs in the arena, rarity only loosely follows distance from the gate
 const pts=[];
 const ER=AR-4,GX=ACX-AR,gauss=()=>(Math.random()+Math.random()+Math.random()-1.5)*1.15;
 // loose random clumps with open gaps, a clear lane just inside the gate, and mixed rarities
 const centers=[...Array(10)].map(()=>{const a=Math.random()*6.28,r=Math.sqrt(Math.random())*ER*.85;return{x:ACX+Math.cos(a)*r,z:Math.sin(a)*r}});
 const okPos=(x,z,md)=>Math.hypot(x-ACX,z)<ER&&!(x<GX+14&&Math.abs(z)<4.5)&&pts.every(q=>Math.hypot(q.x-x,q.z-z)>md);
-for(let n=0;pts.length<68&&n<90000;n++){let x,z;if(n%4===0){x=ACX+(Math.random()*2-1)*ER;z=(Math.random()*2-1)*ER}else{const c=centers[Math.floor(Math.random()*centers.length)];x=c.x+gauss()*4.5;z=c.z+gauss()*4.5}
+for(let n=0;pts.length<EGGN&&n<90000;n++){let x,z;if(n%4===0){x=ACX+(Math.random()*2-1)*ER;z=(Math.random()*2-1)*ER}else{const c=centers[Math.floor(Math.random()*centers.length)];x=c.x+gauss()*4.5;z=c.z+gauss()*4.5}
  if(okPos(x,z,n<60000?3.4:2.6))pts.push({x,z})}
-while(pts.length<68){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*ER;pts.push({x:ACX+Math.cos(a)*r,z:Math.sin(a)*r})}
-const ranked=pts.map(q=>({q,s:(q.x-GX)/(2*ER)+gauss()*.25})).sort((a,b)=>a.s-b.s);
+while(pts.length<EGGN){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*ER;pts.push({x:ACX+Math.cos(a)*r,z:Math.sin(a)*r})}
+const ranked=pts.map(q=>({q,s:(q.x-GX)/(2*ER)+gauss()*7})).sort((a,b)=>a.s-b.s);
 const slots=ranked.map(({q},i)=>{let t=0,c=i;while(c>=TIERN[t]){c-=TIERN[t];t++}
  const m=makeEgg(t);m.position.set(q.x,0,q.z);scene.add(m);return{t,x:q.x,z:q.z,m,alive:true,timer:0}});
 const LOOK={Peasant:{tunic:0x8a6a3a,hair:0x5a3a1a},Slave:{tunic:0x9a9488,hair:0x333333},Soldier:{legion:1},
@@ -517,7 +517,7 @@ function update(dt){
   toast(`${RAR[s.t]} egg. Needs speed ${req(s.t)}, you have ${Math.floor(st.speed)}. Run to your base!`);break}}
  for(const s of slots)if(!s.alive&&s!==p.carry){s.timer-=dt;if(s.timer<=0){s.alive=true;s.m.visible=true}}
  slots.forEach((s,i)=>{if(s.alive)s.m.position.y=Math.abs(Math.sin(now/500+i))*.18});
- const nAlive=slots.reduce((n,s)=>n+(s.alive?1:0),0);if(nAlive!==lastEggs){lastEggs=nAlive;$('eggs').textContent='Eggs '+nAlive+'/68'}
+ const nAlive=slots.reduce((n,s)=>n+(s.alive?1:0),0);if(nAlive!==lastEggs){lastEggs=nAlive;$('eggs').textContent='Eggs '+nAlive+'/'+EGGN}
  // deposit
  if(p.carry&&p.x<-9){if(baseEggs.length<cap()){const b=BSLOT.slice(0,cap()).find(q=>!baseEggs.some(e=>e.q===q));putBaseEgg(p.carry.t,b);
   player.remove(p.mesh);p.carry.alive=false;p.carry.timer=8;p.carry=null;

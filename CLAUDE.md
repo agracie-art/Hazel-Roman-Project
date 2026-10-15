@@ -21,7 +21,7 @@ with a real historical fact. Keep them or sell them for money.
 - `req(t)`: speed needed to carry an egg of tier t (150 + 50*t)
 - Scene setup: ground, temple (`BX`), treadmill (`TX`,`TZ`), Colosseum walls (`ACX`,`AR`, gate on the left)
 - `person()`: builds the blocky player and soldier models
-- `slots`: the 68 arena eggs, tier rises with distance from the gate. `BSLOT`: 6 base egg slots
+- `slots`: the 50 arena eggs, tier rises with distance from the gate. `BSLOT`: 6 base egg slots
 - `update(dt)`: movement, treadmill, pickup, deposit, soldier AI, kick, camera
 - Dialogs: Facts collection and the hatch screen (Keep or Sell)
 
@@ -29,7 +29,7 @@ with a real historical fact. Keep them or sell them for money.
 - Player walk speed 7 times carry multiplier `clamp(speed / req(tier), .2, 1)`
 - Soldier (Centurion) patrol 2.5, chase 5.2, kick range 2.4, cooldown 2.5s. A kick flings you in an arc back to the base (1.3s)
 - Treadmill gives +6 speed per second (player runs in place, speed pill turns green, HUD shows total gained). Start speed 120
-- 68 arena eggs: 16/14/12/10/8/5/3 for tiers 0-6, tier rises with distance from the gate. Base eggs are saved
+- 50 arena eggs: 14/11/9/7/5/3/1 for tiers 0-6, tier rises with distance from the gate. Base eggs are saved
 - Egg respawn 8s (4s after a kick). Sell price is PRICE[tier] * 5
 
 ## Known gaps and ideas (not built yet)
@@ -47,4 +47,4 @@ with a real historical fact. Keep them or sell them for money.
 - VIP: gold crown + VIP label over the player (`applyVip()`), VIP Lounge south of the base (`VX0..VZ1`) is roped off without VIP (solid, flashes `#vipPrompt`), has a x2 speed treadmill (12/s vs 6/s)
 - Hatch fanfare scales by rarity (`FX` table: crack time, cracks, shell pieces, rings, light beams, screen shake, banner). Secret is rainbow
 - Speed resets to BASE_SPEED (120) plus 20 per speed upgrade bought in the Shop every time an egg is delivered to the base (not on hatch)
-- Arena eggs are placed in random clumps each load (10 clump centres, min spacing 3.4, clear lane inside the gate). Rarity follows distance from the gate with noise. Pick-up radius 1.15
+- Arena eggs are placed in random clumps each load (10 clump centres, min spacing 3.4, clear lane inside the gate). Rarity only loosely follows distance from the gate, so rare eggs can be anywhere. Pick-up radius 1.15
