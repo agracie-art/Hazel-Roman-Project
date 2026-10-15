@@ -48,3 +48,4 @@ with a real historical fact. Keep them or sell them for money.
 - Hatch fanfare scales by rarity (`FX` table: crack time, cracks, shell pieces, rings, light beams, screen shake, banner). Secret is rainbow
 - Speed resets to BASE_SPEED (120) plus 20 per speed upgrade bought in the Shop every time an egg is delivered to the base (not on hatch)
 - Arena eggs are placed in random clumps each load (10 clump centres, min spacing 3.4, clear lane inside the gate). Rarity only loosely follows distance from the gate, so rare eggs can be anywhere. Pick-up radius 1.15
+- Upgrade panel (#upg, `upgSync`): shows Upgrade base + Get VIP when you are in the base, only Get VIP at the VIP rope. Not enough cash opens `needCash()` with a Watch Ad +$50 button; after a paid ad the pending purchase (`pendingBuy`) runs automatically. The Shop dialog also has a Watch Ad row
