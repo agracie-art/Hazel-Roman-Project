@@ -21,14 +21,15 @@ with a real historical fact. Keep them or sell them for money.
 - `req(t)`: speed needed to carry an egg of tier t (100 + 30*t)
 - Scene setup: ground, temple (`BX`), treadmill (`TX`,`TZ`), Colosseum walls (`ACX`,`AR`, gate on the left)
 - `person()`: builds the blocky player and soldier models
-- `slots`: the 18 arena eggs, tier rises with distance from the gate. `BSLOT`: 6 base egg slots
+- `slots`: the 68 arena eggs, tier rises with distance from the gate. `BSLOT`: 6 base egg slots
 - `update(dt)`: movement, treadmill, pickup, deposit, soldier AI, kick, camera
 - Dialogs: Facts collection and the hatch screen (Keep or Sell)
 
 ## Tuning knobs
-- Player speed 4.4 times carry multiplier `clamp(speed / req(tier), .2, 1)`
-- Soldier patrol 1.8, chase 3.3, kick range 2.4, cooldown 2.5s
-- Treadmill gives +6 speed per second. Start speed 120
+- Player walk speed 7 times carry multiplier `clamp(speed / req(tier), .2, 1)`
+- Soldier (Centurion) patrol 2.5, chase 5.2, kick range 2.4, cooldown 2.5s. A kick flings you in an arc back to the base (1.3s)
+- Treadmill gives +6 speed per second (player runs in place, speed pill turns green, HUD shows total gained). Start speed 120
+- 68 arena eggs: 16/14/12/10/8/5/3 for tiers 0-6, tier rises with distance from the gate. Base eggs are saved
 - Egg respawn 8s (4s after a kick). Sell price is PRICE[tier] * 5
 
 ## Known gaps and ideas (not built yet)
