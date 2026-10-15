@@ -28,6 +28,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 .btn{cursor:pointer}.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #2a2230}
 .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #hudL{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#inc{background:#2e9e45;color:#fff;font-size:13px;padding:3px 8px;display:none}
 #hudR{display:flex;flex-direction:column;gap:8px;align-items:flex-end;position:fixed;right:calc(10px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px))}
 #labels{position:fixed;inset:0;overflow:hidden;pointer-events:none}
 .lbl{position:absolute;left:0;top:0;display:none;background:rgba(0,0,0,.65);color:#fff;font:700 13px "Courier New",monospace;padding:2px 7px;white-space:nowrap;text-rendering:geometricPrecision}
@@ -43,6 +44,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 #credit{font-weight:700;font-size:clamp(12px,3vh,17px);color:#2a2230;background:#fbf6ea;border:3px solid #2a2230;padding:4px 10px}
 #a2hs{display:none;font-size:13px;font-weight:700;color:#2a2230;max-width:80vw}
 #labels .pop{position:absolute;left:0;top:0;font:900 20px "Courier New",monospace;color:#7cff8a;white-space:nowrap;text-shadow:2px 2px 0 #1b4a24,-2px -2px 0 #1b4a24,2px -2px 0 #1b4a24,-2px 2px 0 #1b4a24}
+#labels .pop.cash{color:#ffd34d;font-size:17px;text-shadow:2px 2px 0 #5a3a00,-1px -1px 0 #5a3a00,1px -1px 0 #5a3a00,-1px 1px 0 #5a3a00}
 #labels .pop.big{color:#ffd34d;font-size:28px;text-shadow:2px 2px 0 #5a3a00,-2px -2px 0 #5a3a00,2px -2px 0 #5a3a00,-2px 2px 0 #5a3a00}
 #banner{display:none;position:fixed;left:0;right:0;top:20%;text-align:center;z-index:9;pointer-events:none;font-weight:900;font-size:clamp(34px,15vh,100px);letter-spacing:3px;text-shadow:4px 4px 0 #2a2230,-3px -3px 0 #2a2230,3px -3px 0 #2a2230,-3px 3px 0 #2a2230}
 #banner.rb{background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(4px 4px 0 #2a2230);animation:rbs 1s linear infinite}
@@ -132,7 +134,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <div id="unlock" popover="manual"></div>
 <div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span></div></div>
 <div id="hudL"><button class="btn" id="facts">Facts</button><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 50</div></div>
-<div id="hudR"><div class="pill" id="money">$0</div><button class="btn" id="shop">Shop</button><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD +$50</span></button></div>
+<div id="hudR"><div class="pill" id="money">$0</div><div class="pill" id="inc"></div><button class="btn" id="shop">Shop</button><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD +$50</span></button></div>
 <div id="zoom"><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
 <div class="pill" id="toast"></div>
 
@@ -191,7 +193,7 @@ function label(t,x,y,z){const el=document.createElement('div');el.className='lbl
  const o={position:new THREE.Vector3(x,y,z),scale:{set(){}},el};LBL.push(o);return o}
 const _lv=new THREE.Vector3();
 const POPS=[];let popN=0,lastLbl=performance.now();
-function pop(t,big,px,pz,py){const el=document.createElement('div');el.className='pop'+(big?' big':'');el.textContent=t;$('labels').appendChild(el);popN++;
+function pop(t,big,px,pz,py,cls){const el=document.createElement('div');el.className='pop'+(big?' big':'')+(cls?' '+cls:'');el.textContent=t;$('labels').appendChild(el);popN++;
  POPS.push({el,x:(px===undefined?p.x:px)+(Math.random()-.5)*(big?.4:1.6),y:py===undefined?(big?4.6:3.4):py,z:(pz===undefined?p.z:pz)+.3,age:0,big})}
 function updateLabels(){const W=innerWidth,H=innerHeight,now=performance.now(),dt=Math.min(.1,(now-lastLbl)/1000);lastLbl=now;
  for(let i=POPS.length-1;i>=0;i--){const o=POPS[i];o.age+=dt;if(o.age>(o.big?1.3:.9)){o.el.remove();POPS.splice(i,1);continue}
@@ -311,15 +313,19 @@ Gladiator:{tunic:0xc9a060,helmet:1},'Tax Collector':{tunic:0x4a7a4a,hair:0x33333
 'Julius Caesar':{tunic:0xf4f0e6,hair:0x888888,toga:1,sc:1.15},'Emperor Nero':{tunic:0xb8921e,hair:0x5a3a1a,toga:1,sc:1.15},
 Boudicca:{tunic:0x8a2a2a,hair:0xc2501a},Prasutagus:{tunic:0x3a5a3a,hair:0xaaaaaa},
 Jupiter:{tunic:0xf4f0e6,hair:0xeeeeee,toga:1,sc:1.5},Juno:{tunic:0x6b8ad9,hair:0x222222,sc:1.4}};
+// ---- kept Romans earn cash over time (per second). Keeping one for ~a minute earns about its sell price
+const INCOME=[.1,.3,.8,2,5,12,30],tierOf=n=>{const r=ROMANS.find(q=>q[0]===n);return r?r[1]:0},rateOf=n=>INCOME[tierOf(n)];
+const fmtR=v=>v<1?v.toFixed(1):String(Math.round(v*10)/10),earnTxt=t=>`$${fmtR(INCOME[t])}/s ($${Math.round(INCOME[t]*60)}/min)`;
+const totalRate=()=>(st.kept||[]).reduce((a,n)=>a+rateOf(n),0);
 const walkers=[];
 function addWalker(name){const lk=LOOK[name]||{tunic:0x888888},m=person(Object.assign({skin:0xf0c8a0},lk));m.scale.setScalar(lk.sc||1);
  const tag=label(name,0,0,0);tag.scale.set(4,1,1);
- const w={name,sc:lk.sc||1,m,tag,x:-24+(Math.random()-.5)*10,z:-4+(Math.random()-.5)*3,tx:0,tz:0,wait:Math.random()*2,h:2.9*(lk.sc||1)+.8};
+ const w={name,sc:lk.sc||1,m,tag,x:-24+(Math.random()-.5)*10,z:-4+(Math.random()-.5)*3,tx:0,tz:0,wait:Math.random()*2,h:2.9*(lk.sc||1)+.8,rate:rateOf(name),acc:0,cool:Math.random()*2};
  m.position.set(w.x,1,w.z);walkers.push(w);return w}
 const baseEggs=[],BSLOT=[...Array(18)].map((_,i)=>({x:-30+(i%6)*2.4,z:3.5+3.4*Math.floor(i/6)}));
 function putBaseEgg(t,q){const m=makeEgg(t);m.position.set(q.x,0,q.z);scene.add(m);baseEggs.push({t,m,q})}
 (st.base||[]).forEach(b=>{if(BSLOT[b.i])putBaseEgg(b.t,BSLOT[b.i])});
-if(!st.kept)st.kept=[];st.kept.slice(-14).forEach(addWalker);
+if(!st.kept)st.kept=[];st.kept.slice(0,14).forEach(addWalker);
 
 // ---------- state ----------
 const p={x:-22,z:6,carry:null,mesh:null};
@@ -329,7 +335,7 @@ let toastT;
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>e.style.display='none',3200)}
 const foundN=()=>ROMANS.filter(r=>st.found[r[0]]).length;
 let shownN=foundN();
-function hud(){$('facts').textContent='Facts '+shownN+'/'+ROMANS.length;$('money').textContent='$'+st.money;$('speed').textContent='Speed '+Math.floor(st.speed)}
+function hud(){$('facts').textContent='Facts '+shownN+'/'+ROMANS.length;$('money').textContent='$'+Math.floor(st.money);{const tr=totalRate();$('inc').style.display=tr>0?'block':'none';$('inc').textContent='+$'+fmtR(tr)+'/s'}$('speed').textContent='Speed '+Math.floor(st.speed)}
 
 // input
 const stick=$('stick'),thumb=$('thumb'),baseEl=$('base');let sid=null,cx0=0,cy0=0;
@@ -446,7 +452,7 @@ function startHatch(e){if(!e||hatching||p.carry||p.fling)return;const pool=ROMAN
  hatching={e,r:pool[Math.floor(Math.random()*pool.length)],t:0,t2:0,stage:0,cracks:0,shell:[],m:null};$('open').style.display='none'}
 $('open').onclick=()=>startHatch(nearEgg);
 function showRoman(name){const r=ROMANS.find(q=>q[0]===name);if(!r)return;
- show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><div class="acts"><button class="btn" id="rx">Close</button></div>`);
+ show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><p class="fact">Earns you <b>${earnTxt(r[1])}</b> while it lives in your base.</p><div class="acts"><button class="btn" id="rx">Close</button></div>`);
  $('rx').onclick=()=>dlg.close()}
 addEventListener('pointerdown',ev=>{if(!started||dlg.open||hatching||adOpen||p.fling||ev.target.closest('button'))return;
  let best=null,bd=48,kind=null;
@@ -518,10 +524,10 @@ function unlockAnim(oldN,newN,r){const box=$('unlock'),T=ROMANS.length;
   $('facts').animate([{transform:'scale(1)'},{transform:'scale(1.6)',background:'#7cff8a'},{transform:'scale(1)'}],{duration:650})},3050)}
 function hatch(e,r){const price=PRICE[e.t]*5;
  const isNew=!st.found[r[0]],oldN=foundN();st.found[r[0]]=1;
- show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
+ show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><p class="fact">Keep it and it earns you <b>${earnTxt(r[1])}</b>. Or sell it now for $${price}.</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
  if(isNew)unlockAnim(oldN,foundN(),r);
  const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud()};
- $('keep').onclick=()=>{st.kept.push(r[0]);addWalker(r[0]);toast(r[0]+' is now walking around your base');done()};
+ $('keep').onclick=()=>{st.kept.push(r[0]);if(walkers.length<14)addWalker(r[0]);toast(r[0]+' is now earning you $'+fmtR(INCOME[r[1]])+'/s');done()};
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
 
 // ---------- loop ----------
@@ -564,7 +570,9 @@ function update(dt){
   if(w.wait>0){w.wait-=dt;setLimbs(w.m.userData,0,0,0)}
   else if(d<.3){w.wait=1+Math.random()*3;w.tx=-24+(Math.random()-.5)*13;w.tz=-4+(Math.random()-.5)*4.4}
   else{w.x+=dx/d*1.4*dt;w.z+=dz/d*1.4*dt;w.m.rotation.y=Math.atan2(dx,dz);setLimbs(w.m.userData,now/160,.6,.6)}
-  w.m.position.set(w.x,1,w.z);w.tag.position.set(w.x,1+w.h,w.z)}
+  w.m.position.set(w.x,1,w.z);w.tag.position.set(w.x,1+w.h,w.z);
+  w.acc+=w.rate*dt;w.cool-=dt;if(w.acc>=1&&w.cool<=0){const n=Math.floor(w.acc);w.acc-=n;st.money+=n;pop('+$'+n,false,w.x,w.z,1+w.h,'cash');w.cool=2;hud()}}
+ if(st.kept.length>14){let er=0;for(let i=14;i<st.kept.length;i++)er+=rateOf(st.kept[i]);st.frac=(st.frac||0)+er*dt;if(st.frac>=1){const n=Math.floor(st.frac);st.frac-=n;st.money+=n;hud()}}
  // treadmill + speed feedback
  beltPos+=(curRate===NORMAL_RATE?7:.8)*dt;belt.forEach((b,i)=>b.position.z=TZ-1.6+((i*.8+beltPos)%4));
  beltPos2=(beltPos2||0)+(curRate===VIP_RATE?18:.8)*dt;belt2.forEach((b,i)=>b.position.z=VTZ-1.6+((i*.8+beltPos2)%4));

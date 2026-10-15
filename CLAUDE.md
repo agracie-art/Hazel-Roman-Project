@@ -54,3 +54,4 @@ with a real historical fact. Keep them or sell them for money.
 - Upgrade popup (#upg) opens when you ENTER the base (or touch the VIP rope); closes with X and stays closed until you leave and re-enter. You spawn inside the base so it does not open at the start
 - In-world guidance: bouncing arrows along the path (red toward the Colosseum, green back toward the base, `updateGuide`), a big bobbing arrow over the gate / hatch pads, a turning arrow over your head, and a bouncing arrow over every egg waiting to be hatched
 - Safe zone: everything outside the gate (x < ACX-AR). Green floor + SAFE ZONE signs outside, red DANGER sign inside. The Centurion only chases inside the walls
+- Kept Romans earn cash per second (`INCOME` per tier = .1,.3,.8,2,5,12,30 /s; ~sell price per minute). First 14 kept walk the temple and pay out as floating +$ pops every ~2s; extra kept Romans earn silently. HUD shows total +$/s under the balance
