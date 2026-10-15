@@ -146,6 +146,29 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 .acts{display:flex;gap:8px;margin-top:12px}.acts .btn{flex:1}
 #rotate{position:fixed;inset:0;background:rgba(20,15,25,.92);color:#fff;display:none;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:9;font-size:18px}
 @media (orientation:portrait){#rotate.on{display:flex}}
+
+/* ---- mobile-first button style: chunky, rounded, big tap targets, thick bottom edge that squishes when pressed ---- */
+:root{--tap:max(42px,calc(46px*var(--ui)));--lip:max(3px,calc(4px*var(--ui)));--jump:max(62px,calc(80px*var(--ui)))}
+#cashRow{display:flex;gap:calc(6px*var(--ui));align-items:stretch;justify-content:flex-end}
+.pill{border-radius:14px;box-shadow:0 var(--lip) 0 #2a2230}
+.btn{border-radius:16px;min-height:var(--tap);padding:calc(8px*var(--ui)) calc(16px*var(--ui));font-weight:900;letter-spacing:.3px;background:linear-gradient(#fffdf5,#ecdfbf);box-shadow:0 var(--lip) 0 #2a2230,inset 0 3px 0 rgba(255,255,255,.85);transition:transform .06s,box-shadow .06s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn:active{transform:translateY(var(--lip));box-shadow:0 0 0 #2a2230,inset 0 3px 0 rgba(255,255,255,.55)}
+.btn:disabled{filter:grayscale(.6);opacity:.7}
+#facts{background:linear-gradient(#dcaaee,#9a58b8);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35);min-width:calc(112px*var(--ui))}
+#shop{background:linear-gradient(#cdf0ff,#5fb8ee);color:#10324a;min-width:calc(124px*var(--ui))}
+#ad{border-radius:16px;justify-content:center;min-width:calc(124px*var(--ui));background:linear-gradient(#ffeb99,#f2b01e)}
+#ad:disabled{background:linear-gradient(#e2dccb,#bdb6a3)}
+#snd{min-height:40px;min-width:40px;padding:calc(4px*var(--ui)) calc(12px*var(--ui))}
+#zoom{right:calc(20px*var(--ui) + env(safe-area-inset-right,0px));bottom:calc(var(--jump) + 24px*var(--ui) + 10px + env(safe-area-inset-bottom,0px));gap:calc(24px*var(--ui))}
+#zoom .btn{width:max(44px,calc(56px*var(--ui)));height:max(44px,calc(56px*var(--ui)));border-radius:50%;padding:0;font-size:max(24px,calc(30px*var(--ui)));line-height:1}
+#jump{width:var(--jump);height:var(--jump);border-radius:50%;padding:0;background:linear-gradient(#a2f5b5,#2fbf56);color:#0f3d1c;font-size:max(14px,calc(17px*var(--ui)));letter-spacing:1px}
+#open{right:calc(var(--jump) + 20px*var(--ui) + 14px + env(safe-area-inset-right,0px));background:linear-gradient(#ffeb99,#f2b01e);color:#2a2230}
+#adx{border-radius:50%;width:max(44px,calc(52px*var(--ui)));height:max(44px,calc(52px*var(--ui)));padding:0}
+#upg .btn{min-height:var(--tap)}
+#upg .btn.can,.adbtn,#open,#readyBtn{box-shadow:0 var(--lip) 0 #2a2230,inset 0 3px 0 rgba(255,255,255,.6)}
+#readyBtn{border-radius:18px}
+.acts .btn{min-height:max(44px,calc(48px*var(--ui)))}
+@keyframes glow{from{box-shadow:0 var(--lip) 0 #2a2230,inset 0 3px 0 rgba(255,255,255,.7),0 0 0 0 rgba(255,211,77,0)}to{box-shadow:0 var(--lip) 0 #2a2230,inset 0 3px 0 rgba(255,255,255,.7),0 0 14px 4px rgba(255,211,77,.95)}}
 </style>
 </head>
 <body>
@@ -165,7 +188,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <div id="unlock" popover="manual"></div>
 <div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span><span class="pill" id="advip"></span></div></div>
 <div id="hudL"><button class="btn" id="facts">Facts</button><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 50</div><button class="btn" id="snd">♪ On</button></div>
-<div id="hudR"><div class="pill" id="money">$0</div><div class="pill" id="inc"></div><button class="btn" id="shop">Shop</button><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH TO EARN</span></button></div>
+<div id="hudR"><div id="cashRow"><div class="pill" id="money">$0</div><div class="pill" id="inc"></div></div><button class="btn" id="shop">Shop</button><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH TO EARN</span></button></div>
 <div id="zoom"><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
 <div class="pill" id="toast"></div>
 
@@ -438,18 +461,21 @@ function buyBase(){const lv=st.baseLv;if(lv>=CAPS.length-1)return;const c=BASE_C
  sfx('buy');st.money-=c;st.baseLv++;applyBase();hud();save();toast('Base upgraded to Level '+(st.baseLv+1)+'!')}
 function buyVip(){if(st.vip)return;if(st.money<VIP_COST)return needCash(VIP_COST,'VIP access',buyVip);
  sfx('buy');st.money-=VIP_COST;st.vip=1;applyVip();hud();save();toast('Welcome, VIP! Visit the VIP Lounge.')}
+function upgFit(){const up=$('upg'),L=$('hudL').getBoundingClientRect().right+8,R=Math.min($('hudR').getBoundingClientRect().left,$('zoom').getBoundingClientRect().left)-8,w=Math.max(220,Math.min(440,R-L));
+ up.style.width=w+'px';up.style.left=((L+R)/2)+'px'}
+addEventListener('resize',()=>{if($('upg').style.display==='block')upgFit()});
 let upgKey='',zoneSeen=false,zoneState=null,cardWant=false,cardDismissed=false;
 function upgSync(mode){const up=$('upg');if(!mode){if(up.style.display!=='none')up.style.display='none';upgKey='';return}
  const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[lv],showBase=mode==='base'&&!maxed,showVip=!st.vip;
  if(!showBase&&!showVip){up.style.display='none';return}
  const key=[mode,lv,st.vip,st.money>=bc,st.money>=VIP_COST].join();
- if(key!==upgKey){upgKey=key;
+ if(key!==upgKey){upgKey=key;setTimeout(upgFit,0);
   const row=(id,t,sub,cost,ok)=>`<div class="urow"><div class="utxt"><b>${t}</b><div class="fact">${sub}</div></div><button class="btn ${ok?'can':'cant'}" id="${id}">$${cost}</button></div>`;
   up.innerHTML=`<div class="uhead"><b>${mode==='vip'?'\u2605 VIP Lounge':'Your Base \u00B7 Level '+(lv+1)}</b><button class="btn" id="ucl" aria-label="Close">\u2715</button></div>`
    +(showBase?row('upBase','\u2B06 Upgrade base','Level '+(lv+2)+': '+CAPS[lv+1]+' egg pads and a fancier temple',bc,st.money>=bc):'')
    +(showVip?row('upVip','\u2605 Get VIP',mode==='vip'?'VIP only! Crown badge, this lounge and a x10 speed treadmill':'Crown badge, the VIP Lounge and a x10 speed treadmill',VIP_COST,st.money>=VIP_COST):'');
   if($('upBase'))$('upBase').onclick=buyBase;if($('upVip'))$('upVip').onclick=buyVip;$('ucl').onclick=()=>{cardDismissed=true}}
- if(up.style.display!=='block')up.style.display='block'}
+ if(up.style.display!=='block'){up.style.display='block';upgFit()}else if(key!==upgKey)upgFit()}
 function confirmReset(){show(`<h3>Reset all progress?</h3><p>This deletes your money, speed, Facts, kept Romans, base upgrades and VIP. It cannot be undone.</p><div class="acts"><button class="btn danger" id="rsty">Yes, reset everything</button></div><div class="acts"><button class="btn" id="rstn">No, keep playing</button></div>`);
  $('rstn').onclick=()=>dlg.close();
  $('rsty').onclick=()=>{noSave=true;try{localStorage.removeItem('reg-save')}catch(e){}location.reload()}}
