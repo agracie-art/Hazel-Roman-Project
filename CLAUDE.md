@@ -50,3 +50,7 @@ with a real historical fact. Keep them or sell them for money.
 - Arena eggs are placed in random clumps each load (10 clump centres, min spacing 3.4, clear lane inside the gate). Rarity only loosely follows distance from the gate, so rare eggs can be anywhere. Pick-up radius 1.15
 - Upgrade panel (#upg, `upgSync`): shows Upgrade base + Get VIP when you are in the base, only Get VIP at the VIP rope. Not enough cash opens `needCash()` with a Watch Ad +$50 button; after a paid ad the pending purchase (`pendingBuy`) runs automatically. The Shop dialog also has a Watch Ad row
 - Reset progress: red button at the bottom of the Shop dialog, asks to confirm, then clears localStorage key reg-save and reloads (`confirmReset()`)
+- HUD layout: Facts + Speed + Eggs top-left; cash, Shop and Watch Ad (W2E) top-right; zoom +/- low on the right edge above JUMP. No toast-style direction hints
+- Upgrade popup (#upg) opens when you ENTER the base (or touch the VIP rope); closes with X and stays closed until you leave and re-enter. You spawn inside the base so it does not open at the start
+- In-world guidance: bouncing arrows along the path (red toward the Colosseum, green back toward the base, `updateGuide`), a big bobbing arrow over the gate / hatch pads, a turning arrow over your head, and a bouncing arrow over every egg waiting to be hatched
+- Safe zone: everything outside the gate (x < ACX-AR). Green floor + SAFE ZONE signs outside, red DANGER sign inside. The Centurion only chases inside the walls
