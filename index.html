@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roman egg grab</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8ecae6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Egg Grab">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 :root{
   box-sizing:border-box;
@@ -46,7 +52,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <dialog id="dlg"><div id="dlgBody"></div></dialog>
 <div id="rotate" class="on"><div>Turn your phone sideways to play</div><button class="btn" id="rotOk">Play anyway</button></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="lib/three.min.js"></script>
 <script>
 const RAR=['Common','Uncommon','Rare','Epic','Legendary','Mythic','Secret'];
 const ECOL=[0x9a9a9a,0x4caf50,0x3d8bd9,0x9c4fd0,0xe8a020,0xd23a52,0x222222];
@@ -70,6 +76,10 @@ const ROMANS=[
 ["Juno",6,"She was Jupiter's wife and she was the most powerful goddess."]];
 const $=id=>document.getElementById(id);
 const st={money:0,speed:120,found:{}};
+try{Object.assign(st,JSON.parse(localStorage.getItem('reg-save')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('reg-save',JSON.stringify(st))}catch(e){}};
+setInterval(save,2000);addEventListener('pagehide',save);
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
 
 // ---------- scene ----------
 const canvas=$('c');
