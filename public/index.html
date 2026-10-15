@@ -71,6 +71,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 dialog{border:3px solid #2a2230;background:var(--panel);color:var(--ink);width:min(440px,92vw);max-height:84vh;overflow:auto;padding:14px;box-shadow:5px 5px 0 #2a2230;font-family:"Courier New",monospace}
 dialog::backdrop{background:rgba(0,0,0,.55)}
 h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
+.fhead{position:sticky;top:-14px;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel);margin:-14px -14px 4px;padding:12px 14px 8px;border-bottom:3px solid #2a2230}
+.fhead h3{margin:0}.fhead .btn{padding:4px 12px;font-size:14px}
 .row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:8px 0;border-top:2px dashed var(--muted)}
 .fact{font-size:13px;color:var(--muted);margin-top:2px}
 .pt{width:52px;height:52px;image-rendering:pixelated;border:3px solid #2a2230;flex:none;background:#fff}
@@ -251,7 +253,8 @@ const so={x:ACX,z:0,tx:ACX,tz:0,cool:0,swing:0};
 const joy={x:0,y:0},keys={};
 let toastT;
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>e.style.display='none',3200)}
-function hud(){$('money').textContent='$'+st.money;$('speed').textContent='Speed '+Math.floor(st.speed)}
+const foundN=()=>ROMANS.filter(r=>st.found[r[0]]).length;
+function hud(){$('facts').textContent='Facts '+foundN()+'/'+ROMANS.length;$('money').textContent='$'+st.money;$('speed').textContent='Speed '+Math.floor(st.speed)}
 
 // input
 const stick=$('stick'),thumb=$('thumb'),baseEl=$('base');let sid=null,cx0=0,cy0=0;
@@ -300,7 +303,7 @@ function portrait(r){if(PORT[r[0]])return PORT[r[0]];const lk=LOOK[r[0]]||{},c=d
  if(lk.legion){F('#b8bcc4',4,2,8,3);F('#b8bcc4',4,5,1,4);F('#b8bcc4',11,5,1,4);F('#c2364a',3,0,10,2)}
  F('#222',6,7,1,1);F('#222',9,7,1,1);F('#a05a4a',7,9,2,1);
  return PORT[r[0]]=c.toDataURL()}
-$('facts').onclick=()=>{show('<h3>Facts</h3>'+ROMANS.map(r=>{const f=st.found[r[0]];return `<div class="row"><img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};${f?'':'filter:brightness(0) opacity(.4)'}"><div style="flex:1"><b>${f?r[0]:'???'}</b><div class="fact">${f?r[2]:'Hatch this Roman to unlock their fact.'}</div></div><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span></div>`}).join('')+'<div class="acts"><button class="btn" id="x">Close</button></div>');$('x').onclick=()=>dlg.close()};
+$('facts').onclick=()=>{show(`<div class="fhead"><h3>Facts ${foundN()}/${ROMANS.length}</h3><button class="btn" id="x2">Close</button></div>`+ROMANS.map(r=>{const f=st.found[r[0]];return `<div class="row"><img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};${f?'':'filter:brightness(0) opacity(.4)'}"><div style="flex:1"><b>${f?r[0]:'???'}</b><div class="fact">${f?r[2]:'Hatch this Roman to unlock their fact.'}</div></div><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span></div>`}).join('')+'<div class="acts"><button class="btn" id="x">Close</button></div>');$('x').onclick=$('x2').onclick=()=>dlg.close()};
 let nearEgg=null;
 const _v=new THREE.Vector3();
 function edge(w,el,t){_v.copy(w).project(camera);const out=_v.x>.8||_v.x<-.8;el.style.display=out&&((_v.x>0)===(el.id==='edgeR'))?'block':'none';el.textContent=t;el.style.top=Math.max(50,Math.min(75,(1-_v.y)*50))+'%'}
