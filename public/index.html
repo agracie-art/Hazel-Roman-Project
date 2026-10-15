@@ -127,6 +127,14 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 .row .btn{white-space:nowrap}
 .row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:8px 0;border-top:2px dashed var(--muted)}
 .fact{font-size:13px;color:var(--muted);margin-top:2px}
+/* unlocked facts: big, dark, high contrast. Locked ones: small, faded */
+.row.on{background:linear-gradient(90deg,rgba(184,146,30,.16),transparent 70%);padding:10px 8px 10px 10px}
+.row.on b{font-size:17px;color:var(--ink)}
+.row.on .fact{font-size:16px;line-height:1.4;color:var(--ink);font-weight:700;margin-top:4px}
+.row.on .pt{width:60px;height:60px}
+.row.off{opacity:.5}
+.row.off b{font-size:13px;color:var(--muted)}
+.row.off .fact{font-size:11px;font-weight:400}
 .pt{width:52px;height:52px;image-rendering:pixelated;border:3px solid #2a2230;flex:none;background:#fff}
 .tag{font-size:12px;font-weight:700;color:#fff;padding:2px 8px;white-space:nowrap}
 .acts{display:flex;gap:8px;margin-top:12px}.acts .btn{flex:1}
@@ -460,7 +468,7 @@ function portrait(r){if(PORT[r[0]])return PORT[r[0]];const lk=LOOK[r[0]]||{},c=d
  if(lk.legion){F('#b8bcc4',4,2,8,3);F('#b8bcc4',4,5,1,4);F('#b8bcc4',11,5,1,4);F('#c2364a',3,0,10,2)}
  F('#222',6,7,1,1);F('#222',9,7,1,1);F('#a05a4a',7,9,2,1);
  return PORT[r[0]]=c.toDataURL()}
-$('facts').onclick=()=>{show(`<div class="fhead"><h3>Facts ${foundN()}/${ROMANS.length}</h3><button class="btn" id="x2">Close</button></div>`+ROMANS.map(r=>{const f=st.found[r[0]];return `<div class="row"><img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};${f?'':'filter:brightness(0) opacity(.4)'}"><div style="flex:1"><b>${f?r[0]:'???'}</b><div class="fact">${f?r[2]:'Hatch this Roman to unlock their fact.'}</div></div><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span></div>`}).join('')+'<div class="acts"><button class="btn" id="x">Close</button></div>');$('x').onclick=$('x2').onclick=()=>dlg.close()};
+$('facts').onclick=()=>{show(`<div class="fhead"><h3>Facts ${foundN()}/${ROMANS.length}</h3><button class="btn" id="x2">Close</button></div>`+ROMANS.map(r=>{const f=st.found[r[0]];return `<div class="row ${f?'on':'off'}"${f?` style="border-left:6px solid ${CSS[r[1]]}"`:''}><img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};${f?'':'filter:brightness(0) opacity(.4)'}"><div style="flex:1"><b>${f?r[0]:'???'}</b><div class="fact">${f?r[2]:'Hatch this Roman to unlock their fact.'}</div></div><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span></div>`}).join('')+'<div class="acts"><button class="btn" id="x">Close</button></div>');$('x').onclick=$('x2').onclick=()=>dlg.close()};
 let nearEgg=null;
 const _v=new THREE.Vector3();
 // ---- bouncing arrows in the world that show where to go
