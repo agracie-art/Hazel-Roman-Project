@@ -26,6 +26,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #hudL{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
 #hudR{display:flex;flex-direction:column;gap:8px;align-items:flex-end;position:fixed;right:calc(10px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px))}
+#labels{position:fixed;inset:0;overflow:hidden;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;display:none;background:rgba(0,0,0,.65);color:#fff;font:700 13px "Courier New",monospace;padding:2px 7px;white-space:nowrap;text-rendering:geometricPrecision}
 #gain{display:none;background:#2e9e45;color:#fff}
 #speed.up{background:#2e9e45;color:#fff;animation:pulse .35s infinite alternate}
 @keyframes pulse{to{transform:scale(1.1)}}
@@ -52,6 +54,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="labels"></div>
 <div id="hudL"><div class="pill" id="money">$0</div><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 68</div></div>
 <div id="hudR"><button class="btn" id="facts">Facts</button><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
 <div class="pill" id="toast"></div>
@@ -103,7 +106,13 @@ scene.add(new THREE.AmbientLight(0xffffff,.5));
 const sun=new THREE.DirectionalLight(0xffffff,.55);sun.position.set(10,20,8);scene.add(sun);
 const M=c=>new THREE.MeshPhongMaterial({color:c,flatShading:true,specular:0,shininess:0});
 function box(w,h,d,c,x,y,z,par){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);(par||scene).add(m);return m}
-function label(t,x,y,z){const c=document.createElement('canvas');c.width=128;c.height=32;const g=c.getContext('2d');g.fillStyle='rgba(0,0,0,.65)';g.fillRect(0,0,128,32);g.fillStyle='#fff';g.font='bold '+Math.min(18,Math.floor(122/(t.length*.6)))+'px monospace';g.textAlign='center';g.fillText(t,64,22);const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx}));s.scale.set(6,1.5,1);s.position.set(x,y,z);scene.add(s);return s}
+const LBL=[];
+function label(t,x,y,z){const el=document.createElement('div');el.className='lbl';el.textContent=t;$('labels').appendChild(el);
+ const o={position:new THREE.Vector3(x,y,z),scale:{set(){}},el};LBL.push(o);return o}
+const _lv=new THREE.Vector3();
+function updateLabels(){const W=innerWidth,H=innerHeight;for(const o of LBL){_lv.copy(o.position).project(camera);
+ if(_lv.z>1||Math.abs(_lv.x)>1.15||Math.abs(_lv.y)>1.15){o.el.style.display='none';continue}
+ o.el.style.display='block';o.el.style.transform='translate('+Math.round((_lv.x+1)/2*W)+'px,'+Math.round((1-_lv.y)/2*H)+'px) translate(-50%,-100%)'}}
 
 // ground
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(160,70),M(0xd8c79a));ground.rotation.x=-Math.PI/2;scene.add(ground);
@@ -163,7 +172,7 @@ const player=person({skin:0xf0c8a0,tunic:0xf4f0e6,hair:0x5a3a1a,toga:1});
 const sol=person({skin:0xe0b088,tunic:0xb02a2a,legion:1});sol.scale.setScalar(1.7);
 box(.2,1.7,1.05,0xb8921e,.78,1.15,.25,sol);box(.24,1.5,.85,0xb02a2a,.8,1.15,.25,sol);box(.28,.35,.35,0xffd34d,.84,1.15,.25,sol);
 const sword=box(.1,.1,1.4,0xd8d8d8,-.75,1.1,.7,sol);
-label('Centurion',0,0,0);const solLabel=scene.children[scene.children.length-1];
+const solLabel=label('Centurion',0,0,0);
 
 // eggs
 function makeEgg(t,small){const g=new THREE.Group();const k=(.65+.08*t)*(small?.7:1);
@@ -327,7 +336,7 @@ function update(dt){
  edge(new THREE.Vector3(ACX,2,0),$('edgeR'),'Colosseum >>');edge(new THREE.Vector3(BX,2,0),$('edgeL'),'<< Your base');
 }
 let last=performance.now();
-function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(!dlg.open)update(dt);renderer.render(scene,camera)}
+function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(!dlg.open)update(dt);renderer.render(scene,camera);updateLabels()}
 camera.position.set(p.x+12,28,p.z+22);
 document.body.addEventListener('pointerdown',lock,{once:true});
 hud();requestAnimationFrame(tick);
