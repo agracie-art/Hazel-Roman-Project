@@ -1,6 +1,6 @@
 # Roman Egg Grab
 
-Browser game prototype. Single file: `index.html` (HTML, CSS and JS inline, three.js r128 from cdnjs).
+Browser game prototype. Game lives in `public/` (served by Cloudflare). Single file: `public/index.html` (HTML, CSS and JS inline, three.js r128 from cdnjs).
 Run it: `python3 -m http.server 8000` then open http://localhost:8000 (landscape, works on phone too).
 
 Read `docs/design.md` for the full game design before changing mechanics.
