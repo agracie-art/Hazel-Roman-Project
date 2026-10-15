@@ -42,3 +42,4 @@ with a real historical fact. Keep them or sell them for money.
 ## Controls
 - Walk: joystick or WASD. Jump: JUMP button or Space. Zoom: +/- buttons, two-finger pinch, mouse wheel, or +/- keys
 - Kept Romans walk around the roofless temple (`LOOK` table = their costumes, `addWalker`). Facts list shows a pixel portrait per Roman (`portrait`)
+- Watch-an-ad button (top right): plays public/ad.mp4 (not cached by the service worker), pays AD_REWARD after AD_MIN seconds watched, 60s cooldown. Close with X, Skip or Escape
