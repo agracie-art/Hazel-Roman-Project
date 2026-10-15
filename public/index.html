@@ -28,6 +28,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 .btn{cursor:pointer}.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #2a2230}
 .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #hudL{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#snd{font-size:13px;padding:4px 10px}
 #inc{background:#2e9e45;color:#fff;font-size:13px;padding:3px 8px;display:none}
 #hudR{display:flex;flex-direction:column;gap:8px;align-items:flex-end;position:fixed;right:calc(10px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px))}
 #labels{position:fixed;inset:0;overflow:hidden;pointer-events:none}
@@ -133,7 +134,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <div id="upg"></div>
 <div id="unlock" popover="manual"></div>
 <div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span></div></div>
-<div id="hudL"><button class="btn" id="facts">Facts</button><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 50</div></div>
+<div id="hudL"><button class="btn" id="facts">Facts</button><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 50</div><button class="btn" id="snd">♪ On</button></div>
 <div id="hudR"><div class="pill" id="money">$0</div><div class="pill" id="inc"></div><button class="btn" id="shop">Shop</button><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD +$50</span></button></div>
 <div id="zoom"><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
 <div class="pill" id="toast"></div>
@@ -345,7 +346,7 @@ const endj=e=>{if(e.pointerId===sid){sid=null;joy.x=joy.y=0;thumb.style.transfor
 stick.addEventListener('pointerup',endj);stick.addEventListener('pointercancel',endj);
 function mv(e){let dx=e.clientX-cx0,dy=e.clientY-cy0;const l=Math.hypot(dx,dy),R=48;if(l>R){dx*=R/l;dy*=R/l}joy.x=dx/R;joy.y=dy/R;thumb.style.transform=`translate(${dx}px,${dy}px)`}
 addEventListener('keydown',e=>keys[e.key.toLowerCase()]=1);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
-const jump=()=>{if(py===0&&!p.fling)pvy=10};
+const jump=()=>{if(py===0&&!p.fling){pvy=10;sfx('jump')}};
 $('jump').addEventListener('pointerdown',e=>{e.stopPropagation();jump()});
 $('zin').onclick=()=>setZ(Z-.2);$('zout').onclick=()=>setZ(Z+.2);
 addEventListener('wheel',e=>setZ(Z+Math.sign(e.deltaY)*.1),{passive:true});
@@ -357,7 +358,7 @@ const AD_REWARD=50,AD_MIN=20,AD_COOL=60;let pendingBuy=null,adOpen=false,adNext=
 function adTxt(){const t=$('adtxt');
  if(adFail){t.textContent='Video would not load';$('adx').style.display='block';return}
  t.textContent=adPaid?'Reward granted! +$'+AD_REWARD+'  (you can close now)':'Reward in '+Math.max(1,Math.ceil(AD_MIN-adv.currentTime))+'s'}
-function adCheck(){if(!adPaid&&!adFail&&(adv.ended||adv.currentTime>=AD_MIN)){adPaid=true;st.money+=AD_REWARD;hud();save();adNext=Date.now()+AD_COOL*1000;$('adx').style.display='block';$('adtxt').classList.add('paid')}adTxt()}
+function adCheck(){if(!adPaid&&!adFail&&(adv.ended||adv.currentTime>=AD_MIN)){adPaid=true;sfx('buy');st.money+=AD_REWARD;hud();save();adNext=Date.now()+AD_COOL*1000;$('adx').style.display='block';$('adtxt').classList.add('paid')}adTxt()}
 function adLabel(){const w=Date.now()<adNext;$('adlbl').textContent=w?'Ad in '+Math.ceil((adNext-Date.now())/1000)+'s':'WATCH AD +$'+AD_REWARD;$('ad').disabled=w}
 setInterval(adLabel,500);
 function adStart(){if(Date.now()<adNext||adOpen)return;adOpen=true;adFail=adPaid=false;$('adx').style.display='none';$('adtxt').classList.remove('paid');$('adbox').style.display='block';adv.src='ad.mp4';adTxt();adv.play().catch(()=>{})}
@@ -376,9 +377,9 @@ function adBtnHtml(id){const left=Math.ceil((adNext-Date.now())/1000);return lef
 function needCash(cost,what,retry){show(`<h3>Not enough cash!</h3><p>${what} costs $${cost}. You have $${st.money}, so you need $${cost-st.money} more.</p><div class="acts">${adBtnHtml('ncad')}</div><div class="acts"><button class="btn" id="ncx">Close</button></div>`);
  $('ncx').onclick=()=>dlg.close();$('ncad').onclick=()=>{dlg.close();pendingBuy=retry;adStart()}}
 function buyBase(){const lv=st.baseLv;if(lv>=CAPS.length-1)return;const c=BASE_COST[lv];if(st.money<c)return needCash(c,'Base upgrade (Level '+(lv+2)+')',buyBase);
- st.money-=c;st.baseLv++;applyBase();hud();save();toast('Base upgraded to Level '+(st.baseLv+1)+'!')}
+ sfx('buy');st.money-=c;st.baseLv++;applyBase();hud();save();toast('Base upgraded to Level '+(st.baseLv+1)+'!')}
 function buyVip(){if(st.vip)return;if(st.money<VIP_COST)return needCash(VIP_COST,'VIP access',buyVip);
- st.money-=VIP_COST;st.vip=1;applyVip();hud();save();toast('Welcome, VIP! Visit the VIP Lounge.')}
+ sfx('buy');st.money-=VIP_COST;st.vip=1;applyVip();hud();save();toast('Welcome, VIP! Visit the VIP Lounge.')}
 let upgKey='',zoneSeen=false,zoneState=null,cardWant=false,cardDismissed=false;
 function upgSync(mode){const up=$('upg');if(!mode){if(up.style.display!=='none')up.style.display='none';upgKey='';return}
  const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[lv],showBase=mode==='base'&&!maxed,showVip=!st.vip;
@@ -406,9 +407,9 @@ function openShop(msg){const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[l
  $('shopad').onclick=()=>{dlg.close();adStart()};
  $('rst').onclick=confirmReset;
  $('sx').onclick=$('sx2').onclick=()=>dlg.close();
- if($('bb'))$('bb').onclick=()=>{if(st.money<bc)return;st.money-=bc;st.baseLv++;applyBase();hud();save();openShop('Base upgraded to Level '+(st.baseLv+1)+'!')};
- $('bs').onclick=()=>{if(st.money<sc)return;st.money-=sc;st.speed+=SPEED_STEP;st.speedBuys++;lastF=Math.floor(st.speed);hud();save();openShop('+'+SPEED_STEP+' speed!')};
- if($('bv'))$('bv').onclick=()=>{if(st.money<VIP_COST)return;st.money-=VIP_COST;st.vip=1;applyVip();hud();save();openShop('Welcome, VIP! Visit the VIP Lounge.')}}
+ if($('bb'))$('bb').onclick=()=>{if(st.money<bc)return;sfx('buy');st.money-=bc;st.baseLv++;applyBase();hud();save();openShop('Base upgraded to Level '+(st.baseLv+1)+'!')};
+ $('bs').onclick=()=>{if(st.money<sc)return;sfx('buy');st.money-=sc;st.speed+=SPEED_STEP;st.speedBuys++;lastF=Math.floor(st.speed);hud();save();openShop('+'+SPEED_STEP+' speed!')};
+ if($('bv'))$('bv').onclick=()=>{if(st.money<VIP_COST)return;sfx('buy');st.money-=VIP_COST;st.vip=1;applyVip();hud();save();openShop('Welcome, VIP! Visit the VIP Lounge.')}}
 $('shop').onclick=()=>openShop();
 const PORT={};
 function portrait(r){if(PORT[r[0]])return PORT[r[0]];const lk=LOOK[r[0]]||{},c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d'),F=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h)},hx=n=>'#'+n.toString(16).padStart(6,'0');
@@ -477,7 +478,7 @@ function addCrack(e,i){const g=e.m,m0=g.children[0],kx=m0.scale.x,ky=m0.scale.y,
  const pts=CRACKS[i%CRACKS.length],dx=pts[0]*kx*2,dy=pts[1]*ky,z=kx*Math.sqrt(Math.max(.05,1-(dx/kx)**2-(dy/ky)**2))+.04;
  const a=box(.1,.55*kx,.08,0x1c1620,dx,cy+dy+.2*kx,z,g);a.rotation.z=.5;const b=box(.1,.45*kx,.08,0x1c1620,dx+.2*kx,cy+dy-.15*kx,z,g);b.rotation.z=-.6}
 function hatchPiece(h,x,y,z,c,sz,vx,vy,vz){const m=box(sz,sz,sz,c,x,y,z);h.shell.push({m,vx,vy,vz});return m}
-function burst(h){const e=h.e,t=e.t,fx=FX[t],k=e.m.children[0].scale.x,lk=LOOK[h.r[0]]||{tunic:0x888888};
+function burst(h){const e=h.e,t=e.t,fx=FX[t];sfx('burst',t);const k=e.m.children[0].scale.x,lk=LOOK[h.r[0]]||{tunic:0x888888};
  e.m.visible=false;h.stage=1;h.t2=0;h.fx=[];shake=fx.shake;
  for(let i=0;i<fx.shell;i++){const gold=i>=fx.shell*.6,a=Math.random()*6.28,v=3+Math.random()*(4+t),
    c=gold?(t===6?new THREE.Color().setHSL(Math.random(),1,.6).getHex():(Math.random()<.5?0xffd34d:RCOL[t])):ECOL[t],sz=gold?.22:.3+Math.random()*.35;
@@ -498,7 +499,7 @@ function updateHatch(dt,now){const h=hatching,e=h.e,t=e.t,fx=FX[t];
   e.m.position.y=Math.sin(Math.min(1,u*1.2)*Math.PI/2)*.28*t;
   const g=u*u;if(t===6)eg.material.emissive.setHSL((now/300)%1,1,.5*g);else if(t>=2)eg.material.emissive.setHex(RCOL[t]).multiplyScalar(g*.9);else eg.material.emissive.setRGB(g*.55,g*.55,g*.55);
   if(t>=3)shake=u*u*.14*t;
-  while(h.cracks<fx.cracks&&u>.12+h.cracks*(.75/fx.cracks))addCrack(e,h.cracks++);
+  while(h.cracks<fx.cracks&&u>.12+h.cracks*(.75/fx.cracks)){sfx('crack',h.cracks);addCrack(e,h.cracks++)}
   if(h.t>=fx.crack)burst(h)}
  else{h.t2+=dt;const T=h.t2,T2=1.9+.15*t,sc=Math.min(1,T/.55),back=1+2.7*Math.pow(sc-1,3)+1.7*Math.pow(sc-1,2);
   h.m.scale.setScalar(Math.max(.01,h.base*back));h.m.position.y=Math.abs(Math.sin(T*8))*(1.4+.2*t)*Math.max(0,1-T/(T2-.7));
@@ -510,7 +511,7 @@ function updateHatch(dt,now){const h=hatching,e=h.e,t=e.t,fx=FX[t];
   for(const o of h.fx){if(o.kind==='ring'){const a=Math.max(0,T-o.delay);o.m.scale.setScalar(1+a*16);o.m.material.opacity=Math.max(0,.9-a*.85);o.m.visible=a>0}
    else{const life=1.8+.15*t,a=Math.max(0,1-T/life);o.m.material.opacity=.6*a;o.m.scale.set(1+Math.sin(T*9+o.i)*.12,1,1+Math.sin(T*9+o.i)*.12);if(t===6)o.m.material.color.setHSL((now/400+o.i*.3)%1,1,.6)}}
   if(T>T2)hatchFinish(h)}}
-function unlockAnim(oldN,newN,r){const box=$('unlock'),T=ROMANS.length;
+function unlockAnim(oldN,newN,r){const box=$('unlock'),T=ROMANS.length;sfx('unlock');
  box.innerHTML=`<div class="ucard" style="border-color:${CSS[r[1]]}"><div class="utitle">NEW FACT UNLOCKED!</div>${r[1]>=2?`<div style="font-weight:900;letter-spacing:2px;color:${CSS[r[1]]}">${RAR[r[1]].toUpperCase()}</div>`:''}<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]}"><div class="uname">${r[0]}</div><div class="ucount"><span id="unum">${oldN}</span><span>/${T}</span></div></div>`;
  try{box.showPopover()}catch(e){box.style.display='flex'}
  const card=box.firstChild;
@@ -531,6 +532,66 @@ function hatch(e,r){const price=PRICE[e.t]*5;
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
 
 // ---------- loop ----------
+// ---------- audio: everything is generated in code (no sound files). Jovial Roman tune when safe, tense war music when carrying an egg ----------
+const AU={ctx:null,master:null,music:null,sfx:null,calm:null,peril:null,noise:null,muted:false,mood:0,tgt:0,step:0,next:0,timer:null,duck:1,lastCoin:0};
+try{AU.muted=localStorage.getItem('reg-mute')==='1'}catch(e){}
+const mtof=m=>440*Math.pow(2,(m-69)/12),SPB=60/126/2;
+function auInit(ctx){AU.ctx=ctx;AU.master=ctx.createGain();AU.master.gain.value=AU.muted?0:.55;AU.master.connect(ctx.destination);
+ AU.music=ctx.createGain();AU.sfx=ctx.createGain();AU.music.connect(AU.master);AU.sfx.connect(AU.master);AU.sfx.gain.value=.9;
+ AU.calm=ctx.createGain();AU.peril=ctx.createGain();AU.calm.connect(AU.music);AU.peril.connect(AU.music);AU.calm.gain.value=1;AU.peril.gain.value=0;
+ const nb=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;AU.noise=nb}
+function auStart(){if(AU.ctx){if(AU.ctx.state==='suspended')AU.ctx.resume();return}
+ const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+ try{auInit(new C());AU.next=AU.ctx.currentTime+.1;AU.step=0;AU.timer=setInterval(auSched,30)}catch(e){AU.ctx=null}}
+function tone(bus,t,m,dur,type,gain,o){o=o||{};const c=AU.ctx,osc=c.createOscillator(),g=c.createGain();osc.type=type;osc.frequency.setValueAtTime(mtof(m),t);
+ if(o.glide)osc.frequency.exponentialRampToValueAtTime(mtof(m+o.glide),t+dur);
+ let n=osc;if(o.lp){const f=c.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(o.lp,t);if(o.lpEnd)f.frequency.exponentialRampToValueAtTime(o.lpEnd,t+dur);osc.connect(f);n=f}
+ n.connect(g);g.connect(bus);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+(o.att||.005));g.gain.exponentialRampToValueAtTime(.0001,t+dur);osc.start(t);osc.stop(t+dur+.05)}
+function hit(bus,t,dur,gain,hp,lp){const c=AU.ctx,src=c.createBufferSource(),g=c.createGain(),f1=c.createBiquadFilter(),f2=c.createBiquadFilter();src.buffer=AU.noise;
+ f1.type='highpass';f1.frequency.value=hp;f2.type='lowpass';f2.frequency.value=lp;src.connect(f1);f1.connect(f2);f2.connect(g);g.connect(bus);
+ g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);src.start(t);src.stop(t+dur+.02)}
+function drum(bus,t,f0,f1,dur,gain){const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+ o.connect(g);g.connect(bus);g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)}
+// jovial: D major-ish lyre tune, bouncy bass, hand drum and tambourine
+const CAL_MEL=[74,0,71,69,66,0,69,71,74,0,76,74,71,0,69,0, 69,71,74,0,76,74,71,69,66,69,71,0,69,0,62,0],CAL_BARS=[50,55,50,57];
+// peril: Phrygian war theme, low brass gallop and taiko drums
+const PER_MEL=[62,0,63,0,66,0,63,62,62,0,63,0,69,0,67,66, 70,0,69,0,67,0,66,63,62,62,0,62,63,0,62,0];
+const PER_A=[38,0,38,38,0,38,39,0],PER_B=[41,0,41,41,0,41,40,0];
+function auStep(s,t){const m=AU.mood,calmOn=m<.97,perilOn=m>.03,bar=s>>3,b=s%8;
+ if(calmOn){const B=AU.calm,n=CAL_MEL[s];
+  if(n){tone(B,t,n,.5,'triangle',.2,{lp:3200,lpEnd:900});tone(B,t,n+12,.22,'sine',.05)}
+  if(b===0||b===4)tone(B,t,CAL_BARS[bar]+(b===4?7:0),.32,'triangle',.22,{lp:600});
+  if(b===0)drum(B,t,130,70,.18,.4);if(b===4)drum(B,t,110,65,.15,.25);
+  if(s%2===1)hit(B,t,.05,.07,7000,12000);if(b===6)hit(B,t,.09,.05,5000,12000)}
+ if(perilOn){const B=AU.peril,n=PER_MEL[s],bs=((bar%4)===2?PER_B:PER_A)[b];
+  if(bs)tone(B,t,bs,.22,'sawtooth',.2,{lp:700,lpEnd:300});
+  if(n)tone(B,t,n,.3,'sawtooth',.11,{lp:1700,lpEnd:600,att:.02});
+  if(b===0)drum(B,t,70,32,.4,.8);if(b===3||b===7)drum(B,t,90,40,.22,.45);if(b===4)drum(B,t,80,36,.3,.6);
+  if(m>.8){hit(B,t,.045,.06,3000,9000);if(b===0)tone(B,t,50,.5,'sawtooth',.1,{lp:900});if(b===0)tone(B,t,63,.5,'sawtooth',.08,{lp:900});if(b===4)tone(B,t,57,.35,'sawtooth',.08,{lp:900})}}}
+function auSched(){const c=AU.ctx;if(!c||c.state!=='running')return;
+ const dv=(typeof adOpen!=='undefined'&&adOpen)?0:(typeof dlg!=='undefined'&&dlg.open)?.55:1;if(dv!==AU.duck){AU.duck=dv;AU.music.gain.setTargetAtTime(dv,c.currentTime,.15)}
+ while(AU.next<c.currentTime+.15){auStep(AU.step,AU.next);AU.next+=SPB;AU.step=(AU.step+1)%32}}
+function auMood(dt){if(!AU.ctx)return;AU.mood+=(AU.tgt-AU.mood)*Math.min(1,dt*2.2);const m=AU.mood;AU.calm.gain.value=Math.cos(m*Math.PI/2);AU.peril.gain.value=Math.sin(m*Math.PI/2)}
+function sfx(name,a){const c=AU.ctx;if(!c||AU.muted||c.state!=='running')return;const t=c.currentTime+.01,b=AU.sfx;
+ switch(name){
+ case 'pickup':tone(b,t,50,.4,'sawtooth',.26,{lp:1300});tone(b,t+.13,57,.6,'sawtooth',.26,{lp:1300});drum(b,t,100,45,.3,.7);break;
+ case 'fling':tone(b,t,66,.8,'sawtooth',.22,{glide:-30,lp:1000});hit(b,t,.5,.35,300,4000);drum(b,t+.05,90,35,.5,.9);break;
+ case 'deliver':[62,66,69,74].forEach((n,i)=>tone(b,t+i*.08,n,.3,'triangle',.22,{lp:3500}));drum(b,t,120,60,.2,.4);break;
+ case 'coin':if(t-AU.lastCoin<.12)return;AU.lastCoin=t;tone(b,t,88,.12,'square',.05);tone(b,t+.07,95,.22,'square',.05);break;
+ case 'buy':[84,88,91,96].forEach((n,i)=>tone(b,t+i*.06,n,.18,'square',.06));tone(b,t+.24,100,.5,'sine',.12);break;
+ case 'crack':hit(b,t,.07,.32,2200,9000);tone(b,t,52+a*3,.09,'square',.05);break;
+ case 'burst':{const tr=a||0,sc=[0,4,7,12,16,19,24,28],cnt=3+tr;
+  drum(b,t,110,40,.5,.9);hit(b,t,.5+tr*.1,.28,1500,12000);
+  for(let i=0;i<cnt;i++)tone(b,t+.05+i*(.075-tr*.004),60+sc[i%8]+(i>7?12:0),.45,'triangle',.18,{lp:4500});
+  if(tr>=2){tone(b,t,50,.9,'sawtooth',.2,{lp:1400});tone(b,t,57,.9,'sawtooth',.16,{lp:1400})}
+  if(tr>=4){[62,66,69,74].forEach(n=>tone(b,t+.1,n,1.2,'sawtooth',.1,{lp:2200}));hit(b,t,1.2,.18,4000,14000)}
+  if(tr>=6){for(let i=0;i<10;i++)tone(b,t+.2+i*.07,84+i*2,.5,'sine',.1)}
+  break}
+ case 'unlock':[79,83,86,91].forEach((n,i)=>tone(b,t+i*.09,n,.4,'sine',.16));break;
+ case 'jump':tone(b,t,72,.14,'square',.05,{glide:7});break}}
+function auSetMuted(v){AU.muted=v;try{localStorage.setItem('reg-mute',v?'1':'0')}catch(e){}if(AU.master)AU.master.gain.setTargetAtTime(v?0:.55,AU.ctx.currentTime,.05);$('snd').textContent=v?'♪ Off':'♪ On'}
+$('snd').onclick=()=>auSetMuted(!AU.muted);$('snd').textContent=AU.muted?'\u266A Off':'\u266A On';
+document.addEventListener('visibilitychange',()=>{if(!AU.ctx)return;if(document.hidden)AU.ctx.suspend();else AU.ctx.resume()});
 const WALK=7,NORMAL_RATE=6,VIP_RATE=NORMAL_RATE*10;let vipFlash=0,curRate=0;
 let Z=Math.max(.45,Math.min(1.8,st.zoom||1)),pvy=0,py=0;
 const setZ=z=>{Z=Math.max(.45,Math.min(1.8,z));st.zoom=Z};
@@ -571,7 +632,7 @@ function update(dt){
   else if(d<.3){w.wait=1+Math.random()*3;w.tx=-24+(Math.random()-.5)*13;w.tz=-4+(Math.random()-.5)*4.4}
   else{w.x+=dx/d*1.4*dt;w.z+=dz/d*1.4*dt;w.m.rotation.y=Math.atan2(dx,dz);setLimbs(w.m.userData,now/160,.6,.6)}
   w.m.position.set(w.x,1,w.z);w.tag.position.set(w.x,1+w.h,w.z);
-  w.acc+=w.rate*dt;w.cool-=dt;if(w.acc>=1&&w.cool<=0){const n=Math.floor(w.acc);w.acc-=n;st.money+=n;pop('+$'+n,false,w.x,w.z,1+w.h,'cash');w.cool=2;hud()}}
+  w.acc+=w.rate*dt;w.cool-=dt;if(w.acc>=1&&w.cool<=0){const n=Math.floor(w.acc);w.acc-=n;st.money+=n;pop('+$'+n,false,w.x,w.z,1+w.h,'cash');sfx('coin');w.cool=2;hud()}}
  if(st.kept.length>14){let er=0;for(let i=14;i<st.kept.length;i++)er+=rateOf(st.kept[i]);st.frac=(st.frac||0)+er*dt;if(st.frac>=1){const n=Math.floor(st.frac);st.frac-=n;st.money+=n;hud()}}
  // treadmill + speed feedback
  beltPos+=(curRate===NORMAL_RATE?7:.8)*dt;belt.forEach((b,i)=>b.position.z=TZ-1.6+((i*.8+beltPos)%4));
@@ -591,7 +652,7 @@ function update(dt){
  if(gainTotal>0)gE.textContent='▲ +'+Math.floor(gainTotal)+' speed ('+(onTread?'+'+curRate+'/s':'stopped')+')';
  $('speed').classList.toggle('up',onTread);
  // pickup
- if(!p.carry&&!p.fling)for(const s of slots){if(s.alive&&Math.hypot(p.x-s.x,p.z-s.z)<1.15){s.alive=false;s.m.visible=false;s.timer=8;p.carry=s;
+ if(!p.carry&&!p.fling)for(const s of slots){if(s.alive&&Math.hypot(p.x-s.x,p.z-s.z)<1.15){s.alive=false;s.m.visible=false;s.timer=8;p.carry=s;sfx('pickup');sfx('pickup');
   p.mesh=makeEgg(s.t,true);p.mesh.position.set(0,2.5,0);player.add(p.mesh);
   toast(`${RAR[s.t]} egg. Needs speed ${req(s.t)}, you have ${Math.floor(st.speed)}. Run to your base!`);break}}
  for(const s of slots)if(!s.alive&&s!==p.carry){s.timer-=dt;if(s.timer<=0){s.alive=true;s.m.visible=true}}
@@ -599,7 +660,7 @@ function update(dt){
  const nAlive=slots.reduce((n,s)=>n+(s.alive?1:0),0);if(nAlive!==lastEggs){lastEggs=nAlive;$('eggs').textContent='Eggs '+nAlive+'/'+EGGN}
  // deposit
  if(p.carry&&p.x<-9){if(baseEggs.length<cap()){const b=BSLOT.slice(0,cap()).find(q=>!baseEggs.some(e=>e.q===q));putBaseEgg(p.carry.t,b);
-  player.remove(p.mesh);p.carry.alive=false;p.carry.timer=8;p.carry=null;
+  player.remove(p.mesh);p.carry.alive=false;p.carry.timer=8;p.carry=null;sfx('deliver');
   const was=Math.floor(st.speed),nb=BASE_SPEED+st.speedBuys*SPEED_STEP;st.speed=nb;lastF=nb;gainTotal=0;hud();save();
   $('speed').animate([{transform:'scale(1)'},{transform:'scale(1.35)',background:'#c2364a',color:'#fff'},{transform:'scale(1)'}],{duration:700});
   toast('Egg placed! Speed reset from '+was+' to '+nb+'. Tap the egg to hatch it.')}else if(!p.warned){toast('Base is full. Open an egg first.');p.warned=1;setTimeout(()=>p.warned=0,3000)}}
@@ -614,12 +675,13 @@ function update(dt){
  if(so.swing>0)sol.userData.ar.rotation.x=-2.4;
  sword.rotation.x=so.swing>0?-1.2:0;
  if(chase&&Math.hypot(p.x-so.x,p.z-so.z)<2.4){so.swing=.5;so.cool=2.5;so.tx=ACX;so.tz=0;
-  const s=p.carry;player.remove(p.mesh);p.carry=null;s.timer=4;p.fling={t:0,x0:p.x,z0:p.z,x1:-18,z1:8};toast('The Centurion flung you!')}
+  const s=p.carry;player.remove(p.mesh);p.carry=null;s.timer=4;p.fling={t:0,x0:p.x,z0:p.z,x1:-18,z1:8};sfx('fling');toast('The Centurion flung you!')}
  // near egg in base
  nearEgg=null;for(const e of baseEggs)if(Math.hypot(p.x-e.q.x,p.z-e.q.z)<2.4)nearEgg=e;
  $('open').style.display=nearEgg&&!p.carry&&!hatching&&!p.fling?'block':'none';
  // hint
  updateGuide(now);
+ {const dSo=Math.hypot(so.x-p.x,so.z-p.z);AU.tgt=(p.carry&&!p.fling)?(p.x<GXp?.35:(dSo<20?1:.7)):0;auMood(dt)}
  // camera
  const hz=hatching?Z*.7:Z,fx=hatching?hatching.e.q.x-12*hz:p.x,fz=hatching?hatching.e.q.z-8*hz:(p.x<-10?(p.z>12?p.z:Math.min(p.z,-3)):p.z);
  camera.position.lerp(new THREE.Vector3(fx+12*hz,28*hz,fz+22*hz),.1);camera.lookAt(camera.position.x,0,camera.position.z-14*hz);
@@ -634,7 +696,7 @@ $('bar').style.animation='none';$('bar').style.width='100%';$('ldg').textContent
 const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches;
 if(ios&&!standalone)$('a2hs').style.display='block';
-$('play').onclick=()=>{const d=document.documentElement,rf=d.requestFullscreen||d.webkitRequestFullscreen;try{if(rf&&!standalone)Promise.resolve(rf.call(d)).catch(()=>{})}catch(e){}
+$('play').onclick=()=>{auStart();const d=document.documentElement,rf=d.requestFullscreen||d.webkitRequestFullscreen;try{if(rf&&!standalone)Promise.resolve(rf.call(d)).catch(()=>{})}catch(e){}
  lock();$('title').style.display='none';started=true;last=performance.now();
  toast('Stand on the treadmill for speed. Then grab an egg from the Colosseum!')};
 </script>
