@@ -1,4 +1,4 @@
-const V='reg-v13',FILES=['./','index.html','manifest.json','lib/three.min.js','icons/icon-180.png','icons/icon-192.png','icons/favicon.png','icons/icon-512.png'];
+const V='reg-v14',FILES=['./','index.html','manifest.json','lib/three.min.js','icons/icon-180.png','icons/icon-192.png','icons/favicon.png','icons/icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(FILES)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==V).map(n=>caches.delete(n)))));self.clients.claim()});
 self.addEventListener('fetch',e=>{if(e.request.url.endsWith('.mp4'))return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});

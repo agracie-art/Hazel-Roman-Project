@@ -48,7 +48,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 #adbox{position:fixed;inset:0;z-index:30;background:#000;display:none}
 #advid{width:100%;height:100%;object-fit:contain;background:#000}
 #adbar{position:fixed;left:0;right:0;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;justify-content:center;align-items:center}
-#adx{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:52px;height:52px;font-size:24px;padding:0;z-index:31}
+#adx{display:none;position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:52px;height:52px;font-size:24px;padding:0;z-index:31}
+#adtxt.paid{background:#2e9e45;color:#fff;font-size:18px}
 #ad:disabled{opacity:.6}
 #gain{display:none;background:#2e9e45;color:#fff}
 #speed.up{background:#2e9e45;color:#fff;animation:pulse .35s infinite alternate}
@@ -84,7 +85,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <canvas id="c"></canvas>
 <div id="labels"></div>
 <div id="flash"></div>
-<div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span><button class="btn" id="adclose">Skip</button></div></div>
+<div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span></div></div>
 <div id="hudL"><div class="pill" id="money">$0</div><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 68</div></div>
 <div id="hudR"><button class="btn" id="facts">Facts</button><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button><button class="btn" id="ad">AD +$50</button></div>
 <div class="pill" id="toast"></div>
@@ -263,17 +264,18 @@ let pd=0;
 addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pd)setZ(Z*pd/d);pd=d}},{passive:true});
 addEventListener('touchend',()=>pd=0);
 addEventListener('keydown',e=>{if(e.key===' ')jump();if(e.key==='+'||e.key==='=')setZ(Z-.2);if(e.key==='-')setZ(Z+.2)});
-const AD_REWARD=50,AD_MIN=20,AD_COOL=60;let adOpen=false,adNext=0,adFail=false;const adv=$('advid');
-const adReady=()=>adv.ended||adv.currentTime>=AD_MIN;
-function adTxt(){if(adFail){$('adtxt').textContent='Video would not load';$('adclose').textContent='Close';return}
- const left=Math.ceil(AD_MIN-adv.currentTime),ok=adReady();$('adtxt').textContent=ok?'Reward ready!':'Reward in '+left+'s';$('adclose').textContent=ok?'Claim $'+AD_REWARD:'Skip (no reward)'}
+const AD_REWARD=50,AD_MIN=20,AD_COOL=60;let adOpen=false,adNext=0,adFail=false,adPaid=false;const adv=$('advid');
+function adTxt(){const t=$('adtxt');
+ if(adFail){t.textContent='Video would not load';$('adx').style.display='block';return}
+ t.textContent=adPaid?'Reward granted! +$'+AD_REWARD+'  (you can close now)':'Reward in '+Math.max(1,Math.ceil(AD_MIN-adv.currentTime))+'s'}
+function adCheck(){if(!adPaid&&!adFail&&(adv.ended||adv.currentTime>=AD_MIN)){adPaid=true;st.money+=AD_REWARD;hud();save();adNext=Date.now()+AD_COOL*1000;$('adx').style.display='block';$('adtxt').classList.add('paid')}adTxt()}
 function adLabel(){const w=Date.now()<adNext;$('ad').textContent=w?'Ad in '+Math.ceil((adNext-Date.now())/1000)+'s':'AD +$'+AD_REWARD;$('ad').disabled=w}
 setInterval(adLabel,500);
-$('ad').onclick=()=>{if(Date.now()<adNext||adOpen)return;adOpen=true;adFail=false;$('adbox').style.display='block';adv.src='ad.mp4';adTxt();adv.play().catch(()=>{})};
-adv.addEventListener('timeupdate',adTxt);adv.addEventListener('ended',adTxt);adv.addEventListener('error',()=>{adFail=true;adTxt()});
-addEventListener('keydown',e=>{if(e.key==='Escape'&&adOpen)$('adclose').click()});
-$('adx').onclick=$('adclose').onclick=()=>{const ok=!adFail&&adReady();adv.pause();adv.removeAttribute('src');adv.load();$('adbox').style.display='none';adOpen=false;last=performance.now();
- if(ok){st.money+=AD_REWARD;hud();save();adNext=Date.now()+AD_COOL*1000;toast('Thanks for watching! +$'+AD_REWARD);adLabel()}};
+$('ad').onclick=()=>{if(Date.now()<adNext||adOpen)return;adOpen=true;adFail=adPaid=false;$('adx').style.display='none';$('adtxt').classList.remove('paid');$('adbox').style.display='block';adv.src='ad.mp4';adTxt();adv.play().catch(()=>{})};
+adv.addEventListener('timeupdate',adCheck);adv.addEventListener('ended',adCheck);adv.addEventListener('error',()=>{adFail=true;adTxt()});
+function adClose(){adv.pause();adv.removeAttribute('src');adv.load();$('adbox').style.display='none';adOpen=false;last=performance.now();if(adPaid)toast('Thanks for watching! +$'+AD_REWARD);adLabel()}
+$('adx').onclick=adClose;
+addEventListener('keydown',e=>{if(e.key==='Escape'&&adOpen&&$('adx').style.display==='block')adClose()});
 $('rotOk').onclick=()=>$('rotate').classList.remove('on');
 function lock(){if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{})}
 
