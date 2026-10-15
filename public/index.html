@@ -91,6 +91,8 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 #upg .btn.can{background:linear-gradient(#ffe27a,#f0b429);color:#2a2230;animation:glow 1.1s infinite alternate}
 #upg .btn.cant{background:#e6e0d0;color:#6d6474}
 #upg .vipb{border-color:#c2364a}
+.danger{background:#c2364a;color:#fff;width:100%}
+#rst{background:#e6e0d0;color:#c2364a;font-size:13px;padding:6px 10px}
 .adbtn{background:linear-gradient(#ffe27a,#f0b429);color:#2a2230;font-size:18px;padding:10px 16px;width:100%}
 .adbtn:disabled{background:#cfc8b8;color:#6d6474}
 #vipPrompt{display:none;position:fixed;left:50%;top:38%;transform:translateX(-50%);z-index:12;background:#c2364a;color:#fff;font-size:18px;padding:12px 18px;animation:vipflash .35s infinite alternate}
@@ -158,7 +160,8 @@ const ROMANS=[
 const $=id=>document.getElementById(id);
 const st={money:0,speed:120,found:{}};
 try{Object.assign(st,JSON.parse(localStorage.getItem('reg-save')||'{}'))}catch(e){}
-const save=()=>{st.base=baseEggs.map(e=>({t:e.t,i:BSLOT.indexOf(e.q)}));try{localStorage.setItem('reg-save',JSON.stringify(st))}catch(e){}};
+let noSave=false;
+const save=()=>{if(noSave)return;st.base=baseEggs.map(e=>({t:e.t,i:BSLOT.indexOf(e.q)}));try{localStorage.setItem('reg-save',JSON.stringify(st))}catch(e){}};
 st.baseLv=st.baseLv||0;st.speedBuys=st.speedBuys||0;st.vip=st.vip||0;
 const BASE_SPEED=120,CAPS=[6,9,12,15,18],BASE_COST=[150,500,1500,4000],VIP_COST=1000,SPEED_STEP=20;
 const cap=()=>CAPS[st.baseLv],speedCost=()=>50*(st.speedBuys+1);
@@ -366,6 +369,9 @@ function upgSync(mode){const up=$('upg');if(!mode){if(up.style.display!=='none')
  if(key!==upgKey){upgKey=key;up.innerHTML=(showBase?`<button class="btn ${st.money>=bc?'can':'cant'}" id="upBase">⬆ Upgrade base  $${bc}</button>`:'')+(showVip?`<button class="btn vipb ${st.money>=VIP_COST?'can':'cant'}" id="upVip">★ Get VIP  $${VIP_COST}</button>`:'');
   if($('upBase'))$('upBase').onclick=buyBase;if($('upVip'))$('upVip').onclick=buyVip}
  up.style.display=(showBase||showVip)?'flex':'none'}
+function confirmReset(){show(`<h3>Reset all progress?</h3><p>This deletes your money, speed, Facts, kept Romans, base upgrades and VIP. It cannot be undone.</p><div class="acts"><button class="btn danger" id="rsty">Yes, reset everything</button></div><div class="acts"><button class="btn" id="rstn">No, keep playing</button></div>`);
+ $('rstn').onclick=()=>dlg.close();
+ $('rsty').onclick=()=>{noSave=true;try{localStorage.removeItem('reg-save')}catch(e){}location.reload()}}
 function openShop(msg){const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[lv],sc=speedCost();
  const btn=(id,cost,label)=>`<button class="btn" id="${id}"${st.money<cost?' disabled':''}>${label}</button>`;
  show(`<div class="fhead"><h3>Shop  $${st.money}</h3><button class="btn" id="sx">Close</button></div>${msg?`<div class="shopmsg">${msg}</div>`:''}
@@ -373,8 +379,10 @@ function openShop(msg){const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[l
 <div class="row"><div><b>Buy speed +${SPEED_STEP}</b><div class="fact">Your speed is ${Math.floor(st.speed)}. The price goes up each time.</div></div>${btn('bs',sc,'$'+sc)}</div>
 <div class="row"><div><b>★ VIP access</b><div class="fact">Gold crown badge over your character, the VIP Lounge and a treadmill that gives 10 times the speed.</div></div>${st.vip?'<span class="tag" style="background:#c9861a">OWNED</span>':btn('bv',VIP_COST,'$'+VIP_COST)}</div>
 <div class="acts">${adBtnHtml('shopad')}</div>
+<div class="acts"><button class="btn danger" id="rst">Reset progress</button></div>
 <div class="acts"><button class="btn" id="sx2">Close</button></div>`);
  $('shopad').onclick=()=>{dlg.close();adStart()};
+ $('rst').onclick=confirmReset;
  $('sx').onclick=$('sx2').onclick=()=>dlg.close();
  if($('bb'))$('bb').onclick=()=>{if(st.money<bc)return;st.money-=bc;st.baseLv++;applyBase();hud();save();openShop('Base upgraded to Level '+(st.baseLv+1)+'!')};
  $('bs').onclick=()=>{if(st.money<sc)return;st.money-=sc;st.speed+=SPEED_STEP;st.speedBuys++;lastF=Math.floor(st.speed);hud();save();openShop('+'+SPEED_STEP+' speed!')};
