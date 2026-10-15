@@ -32,6 +32,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;i
 .lbl.etag{background:rgba(0,0,0,.78);text-align:center;min-width:76px;padding:3px 8px}
 .etm{font-size:14px}.etm.sm{font-size:11px;opacity:.85}.etm.ready{color:#7cff8a;animation:pulse .4s infinite alternate}
 .ebar{height:7px;background:#555;margin-top:3px}.ebar i{display:block;height:100%;background:#ffd34d}
+#readyBtn{display:none;position:fixed;left:50%;top:calc(70px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:7;background:linear-gradient(#9dffae,#35c759);color:#143d1f;font-size:17px;padding:10px 18px;animation:pulse .45s infinite alternate}
 #inc{background:#2e9e45;color:#fff;font-size:13px;padding:3px 8px;display:none}
 #hudR{display:flex;flex-direction:column;gap:8px;align-items:flex-end;position:fixed;right:calc(10px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px))}
 #labels{position:fixed;inset:0;overflow:hidden;pointer-events:none}
@@ -133,6 +134,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <canvas id="c"></canvas>
 <div id="labels"></div>
 <div id="flash"></div>
+<button class="btn" id="readyBtn"></button>
 <div id="banner"></div>
 <div id="upg"></div>
 <div id="unlock" popover="manual"></div>
@@ -460,9 +462,12 @@ function startHatch(e){if(!e||hatching||p.carry||p.fling)return;
  if(e.state==='incubating'){toast(RAR[e.t]+' egg is incubating. Ready in '+fmtT((e.end-Date.now())/1000));return}
  if(e.state!=='ready'&&HATCH_WAIT[e.t]>0){e.state='incubating';e.end=Date.now()+HATCH_WAIT[e.t]*1000;sfx('start');save();toast(RAR[e.t]+' egg is incubating for '+fmtT(HATCH_WAIT[e.t])+'. It hatches when the timer ends!');return}
  beginHatch(e)}
-function beginHatch(e){const pool=ROMANS.filter(r=>r[1]===e.t);
- hatching={e,r:pool[Math.floor(Math.random()*pool.length)],t:0,t2:0,stage:0,cracks:0,shell:[],m:null};$('open').style.display='none'}
+const HATCH_ANIM=false; // set to true to bring back the wobble / crack / burst / Roman-reveal sequence
+function beginHatch(e){const pool=ROMANS.filter(r=>r[1]===e.t),pick=pool[Math.floor(Math.random()*pool.length)];
+ if(!HATCH_ANIM){sfx('burst',e.t);$('open').style.display='none';hatch(e,pick);return}
+ hatching={e,r:pick,t:0,t2:0,stage:0,cracks:0,shell:[],m:null};$('open').style.display='none'}
 $('open').onclick=()=>startHatch(nearEgg);
+$('readyBtn').onclick=()=>{const e=baseEggs.find(q=>q.state==='ready');if(e)startHatch(e)};
 function showRoman(name){const r=ROMANS.find(q=>q[0]===name);if(!r)return;
  show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><p class="fact">Earns you <b>${earnTxt(r[1])}</b> while it lives in your base.</p><div class="acts"><button class="btn" id="rx">Close</button></div>`);
  $('rx').onclick=()=>dlg.close()}
@@ -697,12 +702,13 @@ function update(dt){
     if(left<=0){e.state='ready';sfx('ready');save()}
     else{html=`<div class="etm">\u23F3 ${fmtT(left)}</div><div class="ebar"><i style="width:${(pct*100).toFixed(0)}%"></i></div>`;
      if(!hatching||hatching.e!==e){e.m.rotation.z=Math.sin(nowMs/180+i)*.04*(1+pct*2);const g=(.08+.3*pct)*(.6+.4*Math.sin(nowMs/260));eg.material.emissive.setRGB(g,g*.9,g*.5)}}}
-   if(e.state==='ready'&&(!hatching||hatching.e!==e)){html='<div class="etm ready">READY! TAP</div>';y=5.2;e.m.rotation.z=Math.sin(nowMs/90)*.09;const g=.35+.3*Math.sin(nowMs/150);eg.material.emissive.setRGB(g,g,g*.5);
-    if(!hatching&&!p.carry&&!p.fling&&inBaseNow&&!adOpen)beginHatch(e)}
+   if(e.state==='ready'&&(!hatching||hatching.e!==e)){html='<div class="etm ready">READY! TAP</div>';y=5.2;e.m.rotation.z=Math.sin(nowMs/90)*.09;const g=.35+.3*Math.sin(nowMs/150);eg.material.emissive.setRGB(g,g,g*.5);}
    if(!e.state&&wait>0){html=`<div class="etm sm">${fmtT(wait)} to hatch</div>`;y=4.1}
    if(html){if(!e.tag){e.tag=label('',e.q.x,y,e.q.z);e.tag.el.className+=' etag'}e.tag.position.set(e.q.x,y,e.q.z);if(e.tagHtml!==html){e.tagHtml=html;e.tag.el.innerHTML=html}}
    else if(e.tag){removeLabel(e.tag);e.tag=null;e.tagHtml=''}});
   if(nearEgg){const w=HATCH_WAIT[nearEgg.t];$('open').textContent=nearEgg.state==='incubating'?'Ready in '+fmtT((nearEgg.end-nowMs)/1000):(nearEgg.state==='ready'||!w)?'Open egg':'Start hatching ('+fmtT(w)+')'}}
+ {const nr=baseEggs.filter(q=>q.state==='ready').length,show=nr>0&&!hatching&&!p.carry&&!p.fling&&!adOpen;const rb=$('readyBtn');
+  rb.style.display=show?'block':'none';if(show){const t=nr>1?'\u2605 '+nr+' eggs ready! Tap to hatch':'\u2605 Egg ready! Tap to hatch';if(rb.textContent!==t)rb.textContent=t}}
  $('open').style.display=nearEgg&&!p.carry&&!hatching&&!p.fling?'block':'none';
  // hint
  updateGuide(now);
