@@ -274,11 +274,15 @@ function makeEgg(t,small){const g=new THREE.Group();const k=(.65+.08*t)*(small?.
  box(.3*k+.15,.3*k+.15,.2,0xffffff,0,k*1.5,k*.95,g);return g}
 const TIERN=[16,14,12,10,8,5,3]; // 68 eggs in the arena, tier rises with distance from the gate
 const pts=[];
-const ER=AR-4;
-for(let n=0;pts.length<68&&n<60000;n++){const x=ACX-ER+Math.random()*2*ER,rz=Math.sqrt(Math.max(0,ER*ER-(x-ACX)**2)),z=(Math.random()*2-1)*rz;
- if(pts.every(q=>Math.hypot(q.x-x,q.z-z)>4.2))pts.push({x,z})}
-pts.sort((a,b)=>a.x-b.x);
-const slots=pts.map((q,i)=>{let t=0,c=i;while(c>=TIERN[t]){c-=TIERN[t];t++}
+const ER=AR-4,GX=ACX-AR,gauss=()=>(Math.random()+Math.random()+Math.random()-1.5)*1.15;
+// loose random clumps with open gaps, a clear lane just inside the gate, and mixed rarities
+const centers=[...Array(10)].map(()=>{const a=Math.random()*6.28,r=Math.sqrt(Math.random())*ER*.85;return{x:ACX+Math.cos(a)*r,z:Math.sin(a)*r}});
+const okPos=(x,z,md)=>Math.hypot(x-ACX,z)<ER&&!(x<GX+14&&Math.abs(z)<4.5)&&pts.every(q=>Math.hypot(q.x-x,q.z-z)>md);
+for(let n=0;pts.length<68&&n<90000;n++){let x,z;if(n%4===0){x=ACX+(Math.random()*2-1)*ER;z=(Math.random()*2-1)*ER}else{const c=centers[Math.floor(Math.random()*centers.length)];x=c.x+gauss()*4.5;z=c.z+gauss()*4.5}
+ if(okPos(x,z,n<60000?3.4:2.6))pts.push({x,z})}
+while(pts.length<68){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*ER;pts.push({x:ACX+Math.cos(a)*r,z:Math.sin(a)*r})}
+const ranked=pts.map(q=>({q,s:(q.x-GX)/(2*ER)+gauss()*.25})).sort((a,b)=>a.s-b.s);
+const slots=ranked.map(({q},i)=>{let t=0,c=i;while(c>=TIERN[t]){c-=TIERN[t];t++}
  const m=makeEgg(t);m.position.set(q.x,0,q.z);scene.add(m);return{t,x:q.x,z:q.z,m,alive:true,timer:0}});
 const LOOK={Peasant:{tunic:0x8a6a3a,hair:0x5a3a1a},Slave:{tunic:0x9a9488,hair:0x333333},Soldier:{legion:1},
 Gladiator:{tunic:0xc9a060,helmet:1},'Tax Collector':{tunic:0x4a7a4a,hair:0x333333},Celt:{tunic:0x3a6a8a,hair:0xd07a2a},
@@ -508,7 +512,7 @@ function update(dt){
  if(gainTotal>0)gE.textContent='▲ +'+Math.floor(gainTotal)+' speed ('+(onTread?'+'+curRate+'/s':'stopped')+')';
  $('speed').classList.toggle('up',onTread);
  // pickup
- if(!p.carry&&!p.fling)for(const s of slots){if(s.alive&&Math.hypot(p.x-s.x,p.z-s.z)<1.6){s.alive=false;s.m.visible=false;s.timer=8;p.carry=s;
+ if(!p.carry&&!p.fling)for(const s of slots){if(s.alive&&Math.hypot(p.x-s.x,p.z-s.z)<1.15){s.alive=false;s.m.visible=false;s.timer=8;p.carry=s;
   p.mesh=makeEgg(s.t,true);p.mesh.position.set(0,2.5,0);player.add(p.mesh);
   toast(`${RAR[s.t]} egg. Needs speed ${req(s.t)}, you have ${Math.floor(st.speed)}. Run to your base!`);break}}
  for(const s of slots)if(!s.alive&&s!==p.carry){s.timer-=dt;if(s.timer<=0){s.alive=true;s.m.visible=true}}
