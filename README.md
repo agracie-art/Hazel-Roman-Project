@@ -1,4 +1,4 @@
-# Roman Egg Grab
+# Steal a Roman
 Pixelated 3D Roman egg-stealing game prototype.
 
     cd public && python3 -m http.server 8000
