@@ -225,7 +225,7 @@ postLine(VX0,VZ0,VX1,VZ0,4,true);postLine(VX0,VZ1,VX1,VZ1,4,false);postLine(VX0,
 label('★ VIP Lounge ★',-24,4.2,14).el.className+=' vip';
 box(2.6,.35,4,0xc9a020,VTX,.2,VTZ);
 const belt2=[];for(let i=0;i<5;i++)belt2.push(box(2.2,.1,.3,0xc2364a,VTX,.42,VTZ-1.6+i*.8));
-label('VIP Treadmill x2',VTX,3.2,VTZ);
+label('VIP Treadmill x10',VTX,3.2,VTZ);
 
 // colosseum walls
 const walls=[];
@@ -349,7 +349,7 @@ function openShop(msg){const lv=st.baseLv,maxed=lv>=CAPS.length-1,bc=BASE_COST[l
  show(`<div class="fhead"><h3>Shop  $${st.money}</h3><button class="btn" id="sx">Close</button></div>${msg?`<div class="shopmsg">${msg}</div>`:''}
 <div class="row"><div><b>Stronger base (Lv ${lv+1})</b><div class="fact">${maxed?'Max level! '+cap()+' egg pads.':'Next level: '+CAPS[lv+1]+' egg pads and a fancier temple. You have '+cap()+'.'}</div></div>${maxed?'<span class="tag" style="background:#2e9e45">MAX</span>':btn('bb',bc,'$'+bc)}</div>
 <div class="row"><div><b>Buy speed +${SPEED_STEP}</b><div class="fact">Your speed is ${Math.floor(st.speed)}. The price goes up each time.</div></div>${btn('bs',sc,'$'+sc)}</div>
-<div class="row"><div><b>★ VIP access</b><div class="fact">Gold crown badge over your character, the VIP Lounge and a double speed treadmill.</div></div>${st.vip?'<span class="tag" style="background:#c9861a">OWNED</span>':btn('bv',VIP_COST,'$'+VIP_COST)}</div>
+<div class="row"><div><b>★ VIP access</b><div class="fact">Gold crown badge over your character, the VIP Lounge and a treadmill that gives 10 times the speed.</div></div>${st.vip?'<span class="tag" style="background:#c9861a">OWNED</span>':btn('bv',VIP_COST,'$'+VIP_COST)}</div>
 <div class="acts"><button class="btn" id="sx2">Close</button></div>`);
  $('sx').onclick=$('sx2').onclick=()=>dlg.close();
  if($('bb'))$('bb').onclick=()=>{if(st.money<bc)return;st.money-=bc;st.baseLv++;applyBase();hud();save();openShop('Base upgraded to Level '+(st.baseLv+1)+'!')};
@@ -458,7 +458,7 @@ function hatch(e,r){const price=PRICE[e.t]*5;
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
 
 // ---------- loop ----------
-const WALK=7;let vipFlash=0,curRate=0;
+const WALK=7,NORMAL_RATE=6,VIP_RATE=NORMAL_RATE*10;let vipFlash=0,curRate=0;
 let Z=Math.max(.45,Math.min(1.8,st.zoom||1)),pvy=0,py=0;
 const setZ=z=>{Z=Math.max(.45,Math.min(1.8,z));st.zoom=Z};
 let lastF=Math.floor(st.speed),beltPos=0,beltPos2=0,gainTotal=0,gainIdle=0,lastEggs=-1,dust=[];
@@ -485,7 +485,7 @@ function update(dt){
    if(p.x>L&&p.x<R&&p.z>T&&p.z<B){const d=[p.x-L,R-p.x,p.z-T,B-p.z],m=Math.min(...d);if(m===d[0])p.x=L;else if(m===d[1])p.x=R;else if(m===d[2])p.z=T;else p.z=B;vipFlash=3}
    else if(p.x>VX0&&p.x<VX1&&p.z>T-.7&&p.z<=T)vipFlash=Math.max(vipFlash,2)}
   const ok=!p.carry&&py<.05,onN=ok&&Math.abs(p.x-TX)<1.4&&Math.abs(p.z-TZ)<2.1,onV=ok&&st.vip&&Math.abs(p.x-VTX)<1.4&&Math.abs(p.z-VTZ)<2.1;
-  curRate=onV?12:onN?6:0;onTread=curRate>0;
+  curRate=onV?VIP_RATE:onN?NORMAL_RATE:0;onTread=curRate>0;
   if(l>.1)player.rotation.y=Math.atan2(ix,iz);else if(onTread)player.rotation.y=Math.PI;
   player.rotation.x=onTread?.3:0;
   if(onTread)setLimbs(player.userData,now/55,1.1,1.1);
@@ -499,12 +499,12 @@ function update(dt){
   else{w.x+=dx/d*1.4*dt;w.z+=dz/d*1.4*dt;w.m.rotation.y=Math.atan2(dx,dz);setLimbs(w.m.userData,now/160,.6,.6)}
   w.m.position.set(w.x,1,w.z);w.tag.position.set(w.x,1+w.h,w.z)}
  // treadmill + speed feedback
- beltPos+=(curRate===6?7:.8)*dt;belt.forEach((b,i)=>b.position.z=TZ-1.6+((i*.8+beltPos)%4));
- beltPos2=(beltPos2||0)+(curRate===12?10:.8)*dt;belt2.forEach((b,i)=>b.position.z=VTZ-1.6+((i*.8+beltPos2)%4));
+ beltPos+=(curRate===NORMAL_RATE?7:.8)*dt;belt.forEach((b,i)=>b.position.z=TZ-1.6+((i*.8+beltPos)%4));
+ beltPos2=(beltPos2||0)+(curRate===VIP_RATE?18:.8)*dt;belt2.forEach((b,i)=>b.position.z=VTZ-1.6+((i*.8+beltPos2)%4));
  vipFlash=Math.max(0,vipFlash-dt);$('vipPrompt').style.display=vipFlash>0&&!st.vip?'block':'none';
  vipTag.position.set(p.x,py+3.9,p.z);
  if(onTread){const g=curRate*dt;st.speed+=g;gainTotal+=g;gainIdle=0;
-  const f=Math.floor(st.speed);for(let k=lastF+1;k<=f;k++){pop('+1');if(k%10===0)pop('+10!',true)}lastF=f;
+  const f=Math.floor(st.speed);for(let k=lastF+1;k<=f;k++){if(curRate>NORMAL_RATE*3){if(k%10===0)pop('+10',true)}else{pop('+1');if(k%10===0)pop('+10!',true)}}lastF=f;
   dust.forEach(d=>{if(d.t<=0&&Math.random()<.15){d.t=.5;d.m.position.set(p.x+(Math.random()-.5)*1.4,.3,p.z+1.2)}});hud()}
  else if(gainTotal>0){lastF=Math.floor(st.speed);gainIdle+=dt;if(gainIdle>2.5)gainTotal=0}
  dust.forEach(d=>{if(d.t>0){d.t-=dt;d.m.position.z+=dt*4;d.m.position.y+=dt*1.5;d.m.scale.setScalar(Math.max(.01,d.t*2));if(d.t<=0)d.m.position.y=-5}});
