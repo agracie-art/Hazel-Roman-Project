@@ -73,6 +73,15 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 .fhead{position:sticky;top:-14px;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel);margin:-14px -14px 4px;padding:12px 14px 8px;border-bottom:3px solid #2a2230}
 .fhead h3{margin:0}.fhead .btn{padding:4px 12px;font-size:14px}
+#unlock{display:none;position:fixed;inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:rgba(20,10,30,.55);overflow:hidden;pointer-events:none;z-index:50;color:var(--ink)}
+#unlock:popover-open{display:flex;align-items:center;justify-content:center}
+.ucard{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--panel);border:5px solid #b8921e;box-shadow:6px 6px 0 #2a2230;padding:14px 26px;text-align:center}
+.utitle{font-weight:900;font-size:clamp(18px,5.5vh,30px);color:#b8921e;letter-spacing:1px}
+.ucard .pt{width:clamp(64px,22vh,120px);height:clamp(64px,22vh,120px)}
+.uname{font-weight:900;font-size:clamp(16px,4.5vh,24px)}
+.ucount{font-weight:900;font-size:clamp(34px,13vh,72px);line-height:1;display:flex;align-items:baseline;gap:2px}
+.ucount #unum{display:inline-block}
+.spk{position:absolute;left:50%;top:50%;width:12px;height:12px;background:#ffd34d;box-shadow:0 0 0 2px #2a2230;pointer-events:none}
 .row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:8px 0;border-top:2px dashed var(--muted)}
 .fact{font-size:13px;color:var(--muted);margin-top:2px}
 .pt{width:52px;height:52px;image-rendering:pixelated;border:3px solid #2a2230;flex:none;background:#fff}
@@ -92,6 +101,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <canvas id="c"></canvas>
 <div id="labels"></div>
 <div id="flash"></div>
+<div id="unlock" popover="manual"></div>
 <div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span></div></div>
 <div id="hudL"><div id="moneyRow"><div class="pill" id="money">$0</div><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD +$50</span></button></div><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 68</div></div>
 <div id="hudR"><button class="btn" id="facts">Facts</button><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
@@ -240,7 +250,7 @@ Jupiter:{tunic:0xf4f0e6,hair:0xeeeeee,toga:1,sc:1.5},Juno:{tunic:0x6b8ad9,hair:0
 const walkers=[];
 function addWalker(name){const lk=LOOK[name]||{tunic:0x888888},m=person(Object.assign({skin:0xf0c8a0},lk));m.scale.setScalar(lk.sc||1);
  const tag=label(name,0,0,0);tag.scale.set(4,1,1);
- const w={m,tag,x:-24+(Math.random()-.5)*10,z:-4+(Math.random()-.5)*3,tx:0,tz:0,wait:Math.random()*2,h:2.9*(lk.sc||1)+.8};
+ const w={name,sc:lk.sc||1,m,tag,x:-24+(Math.random()-.5)*10,z:-4+(Math.random()-.5)*3,tx:0,tz:0,wait:Math.random()*2,h:2.9*(lk.sc||1)+.8};
  m.position.set(w.x,1,w.z);walkers.push(w);return w}
 const baseEggs=[],BSLOT=[...Array(6)].map((_,i)=>({x:-30+i*2.4,z:3.5}));
 function putBaseEgg(t,q){const m=makeEgg(t);m.position.set(q.x,0,q.z);scene.add(m);baseEggs.push({t,m,q})}
@@ -254,7 +264,8 @@ const joy={x:0,y:0},keys={};
 let toastT;
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>e.style.display='none',3200)}
 const foundN=()=>ROMANS.filter(r=>st.found[r[0]]).length;
-function hud(){$('facts').textContent='Facts '+foundN()+'/'+ROMANS.length;$('money').textContent='$'+st.money;$('speed').textContent='Speed '+Math.floor(st.speed)}
+let shownN=foundN();
+function hud(){$('facts').textContent='Facts '+shownN+'/'+ROMANS.length;$('money').textContent='$'+st.money;$('speed').textContent='Speed '+Math.floor(st.speed)}
 
 // input
 const stick=$('stick'),thumb=$('thumb'),baseEl=$('base');let sid=null,cx0=0,cy0=0;
@@ -311,10 +322,15 @@ let hatching=null;
 function startHatch(e){if(!e||hatching||p.carry||p.fling)return;const pool=ROMANS.filter(r=>r[1]===e.t);
  hatching={e,r:pool[Math.floor(Math.random()*pool.length)],t:0,t2:0,stage:0,cracks:0,shell:[],m:null};$('open').style.display='none'}
 $('open').onclick=()=>startHatch(nearEgg);
-addEventListener('pointerdown',ev=>{if(!started||dlg.open||hatching||p.carry||p.fling||ev.target.closest('button'))return;
- let best=null,bd=48;for(const e of baseEggs){_lv.set(e.q.x,1.5,e.q.z).project(camera);
-  const d=Math.hypot((_lv.x+1)/2*innerWidth-ev.clientX,(1-_lv.y)/2*innerHeight-ev.clientY);if(d<bd){bd=d;best=e}}
- if(best)startHatch(best)});
+function showRoman(name){const r=ROMANS.find(q=>q[0]===name);if(!r)return;
+ show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><div class="acts"><button class="btn" id="rx">Close</button></div>`);
+ $('rx').onclick=()=>dlg.close()}
+addEventListener('pointerdown',ev=>{if(!started||dlg.open||hatching||adOpen||p.fling||ev.target.closest('button'))return;
+ let best=null,bd=48,kind=null;
+ const test=(x,y,z,o,k)=>{_lv.set(x,y,z).project(camera);const d=Math.hypot((_lv.x+1)/2*innerWidth-ev.clientX,(1-_lv.y)/2*innerHeight-ev.clientY);if(d<bd){bd=d;best=o;kind=k}};
+ if(!p.carry)for(const e of baseEggs)test(e.q.x,1.5,e.q.z,e,'egg');
+ for(const w of walkers)test(w.x,1+1.3*w.sc,w.z,w,'roman');
+ if(kind==='egg')startHatch(best);else if(kind==='roman')showRoman(best.name)});
 function addCrack(e,i){const g=e.m,m0=g.children[0],kx=m0.scale.x,ky=m0.scale.y,cy=m0.position.y;
  const pts=[[-.15,.55],[.25,.15],[-.1,-.3]][i],dx=pts[0]*kx*2,dy=pts[1]*ky,z=kx*Math.sqrt(Math.max(.05,1-(dx/kx)**2-(dy/ky)**2))+.04;
  const a=box(.1,.55*kx,.08,0x1c1620,dx,cy+dy+.2*kx,z,g);a.rotation.z=.5;const b=box(.1,.45*kx,.08,0x1c1620,dx+.2*kx,cy+dy-.15*kx,z,g);b.rotation.z=-.6}
@@ -338,9 +354,22 @@ function updateHatch(dt,now){const h=hatching,e=h.e;
   if(!h.named&&t>.5){h.named=1;pop(h.r[0]+'!',true,e.q.x,e.q.z,3.2*h.base+1)}
   for(const q of h.shell){q.vy-=22*dt;q.m.position.x+=q.vx*dt;q.m.position.z+=q.vz*dt;q.m.position.y=Math.max(.15,q.m.position.y+q.vy*dt);q.m.rotation.x+=dt*6;q.m.rotation.z+=dt*5}
   if(t>1.9)hatchFinish(h)}}
+function unlockAnim(oldN,newN,r){const box=$('unlock'),T=ROMANS.length;
+ box.innerHTML=`<div class="ucard" style="border-color:${CSS[r[1]]}"><div class="utitle">NEW FACT UNLOCKED!</div><img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]}"><div class="uname">${r[0]}</div><div class="ucount"><span id="unum">${oldN}</span><span>/${T}</span></div></div>`;
+ try{box.showPopover()}catch(e){box.style.display='flex'}
+ const card=box.firstChild;
+ card.animate([{transform:'scale(.2) rotate(-8deg)',opacity:0},{transform:'scale(1.15) rotate(2deg)',opacity:1,offset:.6},{transform:'scale(1)',opacity:1}],{duration:500,easing:'ease-out',fill:'forwards'});
+ for(let i=0;i<26;i++){const k=document.createElement('i');k.className='spk';box.appendChild(k);const a=Math.random()*6.28,d=140+Math.random()*200;
+  k.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}],{duration:900+Math.random()*600,delay:250,easing:'ease-out',fill:'forwards'})}
+ setTimeout(()=>{const n=$('unum');if(!n)return;n.textContent=newN;n.style.color='#2e9e45';n.animate([{transform:'scale(2.4)'},{transform:'scale(1)'}],{duration:550,easing:'ease-out'})},900);
+ setTimeout(()=>{const c=box.firstChild;if(!c)return;const a=c.getBoundingClientRect(),b=$('facts').getBoundingClientRect();
+  c.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${b.left+b.width/2-a.left-a.width/2}px,${b.top+b.height/2-a.top-a.height/2}px) scale(.08)`,opacity:.3}],{duration:600,easing:'ease-in',fill:'forwards'})},2400);
+ setTimeout(()=>{try{box.hidePopover()}catch(e){box.style.display='none'}box.innerHTML='';shownN=newN;hud();
+  $('facts').animate([{transform:'scale(1)'},{transform:'scale(1.6)',background:'#7cff8a'},{transform:'scale(1)'}],{duration:650})},3050)}
 function hatch(e,r){const price=PRICE[e.t]*5;
- st.found[r[0]]=1;
+ const isNew=!st.found[r[0]],oldN=foundN();st.found[r[0]]=1;
  show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
+ if(isNew)unlockAnim(oldN,foundN(),r);
  const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud()};
  $('keep').onclick=()=>{st.kept.push(r[0]);addWalker(r[0]);toast(r[0]+' is now walking around your base');done()};
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
@@ -421,7 +450,7 @@ function update(dt){
  const h=$('hint');if(p.carry&&p.x>-9){h.textContent='<< Run to your base!';h.style.display='block'}
  else if(!p.carry&&p.x<-4&&!p.fling){h.textContent='Eggs this way >>';h.style.display='block'}else h.style.display='none';
  // camera
- const hz=hatching?Z*.7:Z,fx=hatching?hatching.e.q.x-12*hz:p.x,fz=hatching?hatching.e.q.z-8*hz:p.z;
+ const hz=hatching?Z*.7:Z,fx=hatching?hatching.e.q.x-12*hz:p.x,fz=hatching?hatching.e.q.z-8*hz:(p.x<-10?Math.min(p.z,-3):p.z);
  camera.position.lerp(new THREE.Vector3(fx+12*hz,28*hz,fz+22*hz),.1);camera.lookAt(camera.position.x,0,camera.position.z-14*hz);
  edge(new THREE.Vector3(ACX,2,0),$('edgeR'),'Colosseum >>');edge(new THREE.Vector3(BX,2,0),$('edgeL'),'<< Your base');
 }
