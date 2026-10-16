@@ -1,5 +1,5 @@
 {
-  "name": "hazel-roman-project",
+  // No "name" on purpose: Cloudflare's builds supply the Worker's real name, so it can never mismatch.
   "compatibility_date": "2025-09-01",
   "assets": { "directory": "./public" },
   "previews": {}
