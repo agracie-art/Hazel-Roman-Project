@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steal a Roman - design sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--ink:#2b4bd6;--teal:#2a8fa6}
+*{box-sizing:border-box}
+body{margin:0;padding:20px 16px 40px;background:#e8e4da;font-family:'Patrick Hand','Comic Sans MS','Segoe Print','Marker Felt',cursive,sans-serif;color:var(--ink)}
+header{max-width:1500px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;color:#3a3550}
+h1{margin:0;font-size:26px;font-weight:700} header p{margin:2px 0 0;font-size:16px}
+#tidy{font:inherit;font-size:17px;padding:8px 16px;border-radius:12px;border:2px solid #3a3550;background:#fff;color:#3a3550;cursor:pointer}
+#tidy[aria-pressed=true]{background:#3a3550;color:#fff}
+.sheets{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:1.05fr 1fr;gap:22px;align-items:start}
+.sheet{background:#fffefb;box-shadow:0 2px 3px rgba(0,0,0,.18),0 12px 28px rgba(0,0,0,.14);border-radius:3px;padding:24px 26px}
+.sheet svg{display:block;width:100%;height:auto}
+ol{margin:0;padding:0;list-style:none;counter-reset:n}
+li{counter-increment:n;position:relative;padding:8px 0 10px 40px;font-size:clamp(20px,2.3vw,31px);line-height:1.28;border-bottom:1.5px solid rgba(43,75,214,.12)}
+li::before{content:counter(n) ".";position:absolute;left:0;top:8px}
+li:last-child{border-bottom:0}
+.note{margin-top:14px;font-size:15px;color:#6a6580}
+@media(max-width:900px){.sheets{grid-template-columns:1fr}}
+</style></head><body>
+<header><div><h1>Steal a Roman - Hazel's design sheet</h1><p>Digital copy of the original drawing and fact list</p></div>
+<button id="tidy" aria-pressed="false">Show tidy spelling</button></header>
+<main class="sheets">
+<section class="sheet" aria-label="Game layout sketch"><svg viewBox="0 0 930 1160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hazel's game layout sketch: safe zone with facts, money, base upgrades, speed, your base, selling shop, treadmill and you; below it the Colosseum full of eggs with a soldier">
+<defs><filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter></defs>
+<g filter="url(#wob)" fill="none" stroke="#2a8fa6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+<!-- boxes -->
+<rect x="177" y="7" width="98" height="32" rx="3"/>
+<rect x="25" y="30" width="90" height="60" rx="4"/>
+<rect x="12" y="116" width="98" height="66" rx="4"/>
+<rect x="7" y="265" width="108" height="90" rx="4"/>
+<rect x="152" y="305" width="123" height="64" rx="3"/>
+<rect x="130" y="70" width="255" height="220" rx="6"/>
+<rect x="503" y="145" width="80" height="115" rx="3"/>
+<path d="M525 205 l18 -22 l18 22 M525 236 l18 -22 l18 22" />
+<!-- you (girl) -->
+<circle cx="737" cy="125" r="33"/><path d="M706 105 q8 -42 55 -22 q22 14 20 52 q-4 18 -16 20"/><path d="M722 120 v6 M748 120 v6 M722 140 q15 12 30 0"/>
+<path d="M737 158 v62 M685 188 l105 0 M737 220 l-22 40 M737 220 l24 40"/>
+<path d="M737 66 v20 M728 77 l9 9 l9 -9"/>
+<!-- base inhabitants -->
+<circle cx="332" cy="110" r="18"/><path d="M322 92 q10 -22 20 0"/><path d="M326 108 v3 M338 108 v3 M326 119 q6 4 12 0 M332 128 v36 M306 146 l26 8 l22 -14 M332 164 l-12 24 M332 164 l14 24"/>
+<circle cx="298" cy="214" r="20"/><path d="M279 205 q4 -24 34 -18 q12 10 6 26"/><path d="M291 212 v4 M306 212 v4 M293 226 q5 -6 12 0 q-6 5 -12 0 M298 234 v32 M278 248 l20 -2 l20 2 M298 266 l-12 20 M298 266 l14 20"/>
+<!-- separator between safe zone and the colosseum -->
+<path d="M0 292 L876 296" stroke-width="4"/><circle cx="876" cy="296" r="3" fill="#2a8fa6"/>
+<!-- colosseum -->
+<path d="M25 390 H860 q15 0 15 15 V1100 q0 30 -30 30 H70 q-45 0 -45 -45 Z" stroke-width="4"/>
+<g stroke-width="3.5">
+<g transform="rotate(-6 110 460)"><ellipse cx="110" cy="460" rx="18" ry="25"/><path d="M107 458 q6 -11 8 1" fill="none"/></g>
+<g transform="rotate(-13 215 440)"><ellipse cx="215" cy="440" rx="30" ry="30"/></g>
+<g transform="rotate(5 307 440)"><ellipse cx="307" cy="440" rx="30" ry="30"/></g>
+<g transform="rotate(-15 475 445)"><ellipse cx="475" cy="445" rx="40" ry="40"/><path d="M469 441 q14 -18 18 2" fill="none"/></g>
+<g transform="rotate(1 605 440)"><ellipse cx="605" cy="440" rx="35" ry="40"/></g>
+<g transform="rotate(-5 765 395)"><ellipse cx="765" cy="395" rx="32" ry="35"/></g>
+<g transform="rotate(-16 700 490)"><ellipse cx="700" cy="490" rx="35" ry="40"/><path d="M695 486 q12 -18 16 2" fill="none"/></g>
+<g transform="rotate(0 90 540)"><ellipse cx="90" cy="540" rx="18" ry="30"/></g>
+<g transform="rotate(-17 165 515)"><ellipse cx="165" cy="515" rx="16" ry="25"/></g>
+<g transform="rotate(-2 185 590)"><ellipse cx="185" cy="590" rx="25" ry="30"/><path d="M181 587 q9 -14 11 2" fill="none"/></g>
+<g transform="rotate(-15 280 555)"><ellipse cx="280" cy="555" rx="35" ry="30"/></g>
+<g transform="rotate(-15 405 560)"><ellipse cx="405" cy="560" rx="30" ry="35"/></g>
+<g transform="rotate(-3 527 590)"><ellipse cx="527" cy="590" rx="35" ry="35"/><path d="M522 586 q12 -16 16 2" fill="none"/></g>
+<g transform="rotate(12 650 625)"><ellipse cx="650" cy="625" rx="35" ry="35"/></g>
+<g transform="rotate(-14 745 615)"><ellipse cx="745" cy="615" rx="40" ry="38"/></g>
+<g transform="rotate(-10 120 680)"><ellipse cx="120" cy="680" rx="22" ry="42"/><path d="M117 676 q8 -19 10 2" fill="none"/></g>
+<g transform="rotate(5 265 725)"><ellipse cx="265" cy="725" rx="30" ry="38"/></g>
+<g transform="rotate(16 390 705)"><ellipse cx="390" cy="705" rx="30" ry="38"/></g>
+<g transform="rotate(3 120 845)"><ellipse cx="120" cy="845" rx="35" ry="35"/><path d="M115 842 q12 -16 16 2" fill="none"/></g>
+<g transform="rotate(-4 155 895)"><ellipse cx="155" cy="895" rx="38" ry="32"/></g>
+<g transform="rotate(17 310 900)"><ellipse cx="310" cy="900" rx="35" ry="40"/></g>
+<g transform="rotate(-16 425 840)"><ellipse cx="425" cy="840" rx="35" ry="38"/><path d="M420 836 q12 -17 16 2" fill="none"/></g>
+<g transform="rotate(13 220 960)"><ellipse cx="220" cy="960" rx="25" ry="30"/></g>
+<g transform="rotate(-8 775 820)"><ellipse cx="775" cy="820" rx="38" ry="38"/></g>
+<g transform="rotate(-13 730 985)"><ellipse cx="730" cy="985" rx="38" ry="35"/><path d="M724 982 q13 -16 17 2" fill="none"/></g>
+<g transform="rotate(-14 120 1065)"><ellipse cx="120" cy="1065" rx="30" ry="30"/></g>
+<g transform="rotate(-7 225 1065)"><ellipse cx="225" cy="1065" rx="35" ry="30"/></g>
+<g transform="rotate(11 320 1045)"><ellipse cx="320" cy="1045" rx="35" ry="40"/><path d="M315 1041 q12 -18 16 2" fill="none"/></g>
+<g transform="rotate(-11 395 1050)"><ellipse cx="395" cy="1050" rx="32" ry="30"/></g>
+<g transform="rotate(3 555 1075)"><ellipse cx="555" cy="1075" rx="30" ry="28"/></g>
+<g transform="rotate(5 65 805)"><ellipse cx="65" cy="805" rx="30" ry="30"/><path d="M60 802 q10 -14 14 2" fill="none"/></g>
+<g transform="rotate(-5 795 500)"><ellipse cx="795" cy="500" rx="26" ry="30"/></g>
+<g transform="rotate(2 475 725)"><ellipse cx="475" cy="725" rx="28" ry="32"/></g>
+<g transform="rotate(-16 675 760)"><ellipse cx="675" cy="760" rx="30" ry="34"/><path d="M670 757 q10 -15 14 2" fill="none"/></g>
+</g>
+<!-- soldier -->
+<circle cx="555" cy="830" r="46"/><path d="M505 820 q50 -80 100 0 M530 770 v26 M545 764 v30 M560 762 v32 M575 764 v30 M590 770 v26"/>
+<path d="M530 825 l14 8 M580 833 l14 -8 M536 818 v-4 M588 818 v-4 M540 862 q16 -14 32 0 M555 838 v10"/>
+<path d="M555 876 v100 M555 905 l-70 14 M555 905 l62 10 M555 976 l-30 44 M555 976 l32 40"/>
+<path d="M425 918 l68 0 M493 906 v26 M480 912 v14 M425 918 l-6 -2 l-6 6"/>
+<rect x="605" y="895" width="55" height="95" rx="6"/>
+</g>
+<g fill="#2b4bd6" font-family="'Patrick Hand','Comic Sans MS','Segoe Print','Marker Felt',cursive,sans-serif" text-anchor="middle">
+<text x="547" y="48" font-size="68" fill="#2a8fa6">safe zone</text>
+<text x="226" y="32" font-size="26" fill="#2a8fa6">money</text>
+<text x="70" y="70" font-size="34" fill="#2a8fa6">Facts</text>
+<text x="61" y="146" font-size="24" fill="#2a8fa6">base</text><text x="61" y="171" font-size="22" fill="#2a8fa6">upgrades</text>
+<text x="76" y="256" font-size="30" fill="#2a8fa6">speed</text><text x="61" y="330" font-size="62" fill="#2a8fa6">120</text>
+<text x="213" y="337" font-size="23" fill="#2a8fa6">Selling</text><text x="213" y="360" font-size="23" fill="#2a8fa6">Shop</text>
+<text x="205" y="150" font-size="56" fill="#2a8fa6">your</text><text x="198" y="232" font-size="56" fill="#2a8fa6">base</text>
+<text x="543" y="126" font-size="26" fill="#2a8fa6">treadmill</text>
+<text x="737" y="60" font-size="34" fill="#2a8fa6">you</text>
+<text x="632" y="955" font-size="22" fill="#2a8fa6">Shop</text><text x="632" y="976" font-size="22" fill="#2a8fa6">up</text>
+</g></svg></section>
+<section class="sheet" aria-label="Roman facts"><ol>
+<li><span class="f" data-raw="britain used to be called britania" data-tidy="Britain used to be called Britannia.">britain used to be called britania</span></li>
+<li><span class="f" data-raw="julius ceaser's most used phrase was He came, He saw, he conquerd" data-tidy="Julius Caesar's most used phrase was: He came, he saw, he conquered.">julius ceaser's most used phrase was He came, He saw, he conquerd</span></li>
+<li><span class="f" data-raw="julius ceaser invaded in 50 bc and 55 bc" data-tidy="Julius Caesar invaded in 50 BC and 55 BC.">julius ceaser invaded in 50 bc and 55 bc</span></li>
+<li><span class="f" data-raw="emperor claudius brought an elephant to britan!" data-tidy="Emperor Claudius brought an elephant to Britain!">emperor claudius brought an elephant to britan!</span></li>
+<li><span class="f" data-raw="the romans created the pie" data-tidy="The Romans created the pie.">the romans created the pie</span></li>
+<li><span class="f" data-raw="the romans made a spread called garum made of rotten fish guts" data-tidy="The Romans made a spread called garum, made of rotten fish guts.">the romans made a spread called garum made of rotten fish guts</span></li>
+<li><span class="f" data-raw="the emperor julius Agricola made the britons wear Roman togas, made them speak in latin and even made them build roman bathouses to make britan feel more like rome" data-tidy="The emperor Julius Agricola made the Britons wear Roman togas, made them speak in Latin and even made them build Roman bathhouses to make Britain feel more like Rome.">the emperor julius Agricola made the britons wear Roman togas, made them speak in latin and even made them build roman bathouses to make britan feel more like rome</span></li>
+<li><span class="f" data-raw="Over 3000 Buried Roman Hoards have been found!" data-tidy="Over 3000 buried Roman hoards have been found!">Over 3000 Buried Roman Hoards have been found!</span></li>
+</ol><p class="note" id="note">Shown exactly as written. Use the button for tidied spelling.</p></section>
+</main>
+<script>
+const b=document.getElementById('tidy'),n=document.getElementById('note');
+b.onclick=()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);b.textContent=on?'Show as written':'Show tidy spelling';
+ document.querySelectorAll('.f').forEach(e=>e.textContent=on?e.dataset.tidy:e.dataset.raw);
+ n.textContent=on?'Spelling and capital letters tidied. The facts themselves are unchanged.':'Shown exactly as written. Use the button for tidied spelling.'};
+</script></body></html>
