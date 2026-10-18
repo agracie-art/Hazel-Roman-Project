@@ -205,6 +205,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 #upg .btn.cant{color:#3a3348}
 #rst{color:#951a2d}
 .bigfact{font-size:clamp(17px,2.6vw,22px);font-weight:800;line-height:1.4;color:var(--ink);margin:10px 0 8px;padding:8px 12px;border-left:7px solid #b8921e;background:linear-gradient(90deg,rgba(184,146,30,.2),transparent)}
+.utap{font-size:12px;font-weight:700;color:var(--muted);margin-top:2px}
 </style>
 </head>
 <body>
@@ -674,26 +675,29 @@ function updateHatch(dt,now){const h=hatching,e=h.e,t=e.t,fx=FX[t];
    else{const life=1.8+.15*t,a=Math.max(0,1-T/life);o.m.material.opacity=.6*a;o.m.scale.set(1+Math.sin(T*9+o.i)*.12,1,1+Math.sin(T*9+o.i)*.12);if(t===6)o.m.material.color.setHSL((now/400+o.i*.3)%1,1,.6)}}
   if(!h.rv&&T>T2*.55){h.rv=1;showReveal(h)}
   if(h.rv&&(T>=h.rvEnd||h.skip))hatchFinish(h)}}
-function unlockAnim(oldN,newN,r){const box=$('unlock'),T=ROMANS.length;sfx('unlock');
- box.innerHTML=`<div class="ucard" style="border-color:${CSS[r[1]]}"><div class="utitle">NEW FACT UNLOCKED!</div>${r[1]>=2?`<div style="font-weight:900;letter-spacing:2px;color:${CSS[r[1]]}">${RAR[r[1]].toUpperCase()}</div>`:''}<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]}"><div class="uname">${r[0]}</div><div class="ucount"><span id="unum">${oldN}</span><span>/${T}</span></div></div>`;
+let unlockBusy=false;
+function unlockAnim(oldN,newN,r,cb){const box=$('unlock'),T=ROMANS.length,ts=[],t0=performance.now();sfx('unlock');unlockBusy=true;document.body.classList.add('cining');
+ box.innerHTML=`<div class="ucard" style="border-color:${CSS[r[1]]}"><div class="utitle">NEW FACT UNLOCKED!</div>${r[1]>=2?`<div style="font-weight:900;letter-spacing:2px;color:${CSS[r[1]]}">${RAR[r[1]].toUpperCase()}</div>`:''}<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]}"><div class="uname">${r[0]}</div><div class="utap">tap to continue</div><div class="ucount"><span id="unum">${oldN}</span><span>/${T}</span></div></div>`;
  try{box.showPopover()}catch(e){box.style.display='flex'}
  const card=box.firstChild;
  card.animate([{transform:'scale(.2) rotate(-8deg)',opacity:0},{transform:'scale(1.15) rotate(2deg)',opacity:1,offset:.6},{transform:'scale(1)',opacity:1}],{duration:500,easing:'ease-out',fill:'forwards'});
  for(let i=0;i<20+r[1]*16;i++){const k=document.createElement('i');k.className='spk';k.style.background=r[1]===6?`hsl(${Math.random()*360},100%,60%)`:(r[1]>=3&&Math.random()<.5?BANC[r[1]]:'#ffd34d');box.appendChild(k);const a=Math.random()*6.28,d=140+Math.random()*(200+r[1]*50);
   k.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}],{duration:900+Math.random()*600,delay:250,easing:'ease-out',fill:'forwards'})}
- setTimeout(()=>{const n=$('unum');if(!n)return;n.textContent=newN;n.style.color='#2e9e45';n.animate([{transform:'scale(2.4)'},{transform:'scale(1)'}],{duration:550,easing:'ease-out'})},900);
- setTimeout(()=>{const c=box.firstChild;if(!c)return;const a=c.getBoundingClientRect(),b=$('facts').getBoundingClientRect();
-  c.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${b.left+b.width/2-a.left-a.width/2}px,${b.top+b.height/2-a.top-a.height/2}px) scale(.08)`,opacity:.3}],{duration:600,easing:'ease-in',fill:'forwards'})},2400);
- setTimeout(()=>{try{box.hidePopover()}catch(e){box.style.display='none'}box.innerHTML='';shownN=newN;hud();
-  $('facts').animate([{transform:'scale(1)'},{transform:'scale(1.6)',background:'#7cff8a'},{transform:'scale(1)'}],{duration:650})},3050)}
+ ts.push(setTimeout(()=>{const n=$('unum');if(!n)return;n.textContent=newN;n.style.color='#2e9e45';n.animate([{transform:'scale(2.4)'},{transform:'scale(1)'}],{duration:550,easing:'ease-out'})},900));
+ ts.push(setTimeout(()=>{const c=box.firstChild;if(!c)return;const a=c.getBoundingClientRect(),b=$('facts').getBoundingClientRect();
+  c.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${b.left+b.width/2-a.left-a.width/2}px,${b.top+b.height/2-a.top-a.height/2}px) scale(.08)`,opacity:.3}],{duration:600,easing:'ease-in',fill:'forwards'})},2400));
+ const end=()=>{ts.forEach(clearTimeout);box.onclick=null;document.body.classList.remove('cining');try{box.hidePopover()}catch(e){box.style.display='none'}box.style.pointerEvents='';box.innerHTML='';shownN=newN;hud();
+  $('facts').animate([{transform:'scale(1)'},{transform:'scale(1.6)'/*pulse*/,background:'#7cff8a'},{transform:'scale(1)'}],{duration:650});unlockBusy=false;if(cb)cb()};
+ ts.push(setTimeout(end,3050));
+ box.style.pointerEvents='auto';box.onclick=()=>{if(performance.now()-t0>1300)end()}}
 function hatch(e,r){const price=PRICE[e.t]*5;
  const isNew=!st.found[r[0]],oldN=foundN();st.found[r[0]]=1;
- show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p class="bigfact" style="border-left-color:${CSS[r[1]]}">${r[2]}</p><p class="fact">Keep it and it earns you <b>${earnTxt(r[1])}</b>. Or sell it now for $${price}.</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
- const pend=isNew?{o:oldN,n:foundN(),r}:null;
- const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);if(e.tag){removeLabel(e.tag);e.tag=null}baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud();if(pend)setTimeout(()=>unlockAnim(pend.o,pend.n,pend.r),250)};
+ const openPopup=()=>{show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p class="bigfact" style="border-left-color:${CSS[r[1]]}">${r[2]}</p><p class="fact">Keep it and it earns you <b>${earnTxt(r[1])}</b>. Or sell it now for $${price}.</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
+ const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);if(e.tag){removeLabel(e.tag);e.tag=null}baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud()};
  const lock=['keep','sell'].map(id=>$(id));lock.forEach(b=>b.disabled=true);setTimeout(()=>lock.forEach(b=>b.disabled=false),1000);
  $('keep').onclick=()=>{st.kept.push(r[0]);if(walkers.length<14)addWalker(r[0]);toast(r[0]+' is now earning you $'+fmtR(INCOME[r[1]])+'/s');done()};
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
+ if(isNew)unlockAnim(oldN,foundN(),r,openPopup);else openPopup()}
 
 // ---------- loop ----------
 // ---------- audio: everything is generated in code (no sound files). Jovial Roman tune when safe, tense war music when carrying an egg ----------
@@ -872,7 +876,7 @@ function update(dt){
  if(shake>.01){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake*.6;shake*=.92}
 }
 let last=performance.now(),started=false;
-function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(!dlg.open&&started&&!adOpen)update(dt);renderer.render(scene,camera);updateLabels()}
+function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(!dlg.open&&started&&!adOpen&&!unlockBusy)update(dt);renderer.render(scene,camera);updateLabels()}
 camera.position.set(p.x+12,28,p.z+22);
 document.body.addEventListener('pointerdown',lock,{once:true});
 hud();requestAnimationFrame(tick);
