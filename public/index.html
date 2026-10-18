@@ -6,6 +6,7 @@
 <title>Steal a Roman</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#8ecae6">
+<meta name="color-scheme" content="light only">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Steal a Roman">
@@ -19,12 +20,10 @@
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
   --panel:#fbf6ea;--ink:#2a2230;--gold:#b8921e;--purple:#5b1e4a;--muted:#6d6474;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--panel:#241e2b;--ink:#f0ebf3;--gold:#e0b84a;--purple:#d79bc4;--muted:#a79db0}}
-:root[data-theme="dark"]{--panel:#241e2b;--ink:#f0ebf3;--gold:#e0b84a;--purple:#d79bc4;--muted:#a79db0}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:#8ecae6;overflow:hidden;font-family:"Courier New",monospace;touch-action:none;user-select:none;-webkit-user-select:none}
 canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
-:root{--ui:1}
+:root{--ui:1;color-scheme:light only}
 .pill,.btn{background:var(--panel);color:var(--ink);border:max(2px,calc(3px*var(--ui))) solid #2a2230;padding:calc(6px*var(--ui)) calc(10px*var(--ui));font:700 calc(15px*var(--ui)) "Courier New",monospace;box-shadow:calc(3px*var(--ui)) calc(3px*var(--ui)) 0 #2a2230}
 .btn{cursor:pointer}.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #2a2230}
 .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
@@ -173,7 +172,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 #adlbl small{font-size:.8em;font-weight:700;opacity:.85}
 .adbtn small{display:block;font-size:.65em;font-weight:700;opacity:.8}
 /* JUMP is see-through so it never hides the game, and firms up while pressed */
-#jump{background:rgba(70,200,100,.42);border-color:rgba(42,34,48,.55);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.5);box-shadow:0 var(--lip) 0 rgba(42,34,48,.4);backdrop-filter:blur(1px)}
+#jump{background:rgba(70,200,100,.5);border-color:rgba(42,34,48,.6);color:#0b3a19;text-shadow:0 1px 0 rgba(255,255,255,.85),0 0 6px rgba(255,255,255,.8);box-shadow:0 var(--lip) 0 rgba(42,34,48,.4);backdrop-filter:blur(1px)}
 #jump:active{background:rgba(70,200,100,.85);box-shadow:0 0 0 rgba(42,34,48,.4)}
 /* credit: flat rainbow lettering with unicorn decorations. Deliberately NOT a box or pill, so nobody mistakes it for a button */
 #credit{position:static;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;animation:none;padding:0 4px;color:#fffbe8;font-size:clamp(11px,3vh,15px);font-weight:900;letter-spacing:1px;text-align:center;line-height:1.15;text-shadow:2px 2px 0 #2a2230,-1px -1px 0 #2a2230,1px -1px 0 #2a2230,-1px 1px 0 #2a2230;pointer-events:none;user-select:none;-webkit-user-select:none;cursor:default}
@@ -203,6 +202,8 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 #reveal.rb #rvtier{background:linear-gradient(90deg,#ff3b3b,#ffe14d,#3ddc5a,#38a8ff,#a855ff)!important}
 #rvnew{font-size:clamp(12px,3.6vh,22px);font-weight:900;color:#ffe14d;text-shadow:2px 2px 0 #2a2230;min-height:1em;animation:pulse .4s infinite alternate}
 #rvtap{font-size:clamp(10px,2.6vh,14px);color:rgba(255,255,255,.7);font-weight:700;margin-top:.6vh}
+#upg .btn.cant{color:#3a3348}
+#rst{color:#951a2d}
 </style>
 </head>
 <body>
@@ -589,7 +590,7 @@ function updateGuide(now){const mode=(p.fling||hatching)?null:p.carry?(p.x>-9?'h
  if(Math.hypot(dx,dz)>6){headArrow.visible=true;headArrow.rotation.y=Math.atan2(-dz,dx);headArrow.position.set(p.x,py+4.6+Math.abs(Math.sin(now/200))*.7,p.z)}}
 let hatching=null;
 // rarer eggs have to incubate first. The timer keeps running even when the game is closed
-const HATCH_WAIT=[0,5,15,30,60,120,240];
+const HATCH_WAIT=[0,0,0,0,60,120,240]; // only Legendary, Mythic and Secret eggs incubate
 const fmtT=sec=>{sec=Math.max(0,Math.ceil(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')};
 function removeLabel(o){if(!o)return;o.el.remove();const i=LBL.indexOf(o);if(i>=0)LBL.splice(i,1)}
 function speedDialog(e){const left=(e.end-Date.now())/1000;
