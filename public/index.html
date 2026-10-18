@@ -204,6 +204,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 #rvtap{font-size:clamp(10px,2.6vh,14px);color:rgba(255,255,255,.7);font-weight:700;margin-top:.6vh}
 #upg .btn.cant{color:#3a3348}
 #rst{color:#951a2d}
+.bigfact{font-size:clamp(17px,2.6vw,22px);font-weight:800;line-height:1.4;color:var(--ink);margin:10px 0 8px;padding:8px 12px;border-left:7px solid #b8921e;background:linear-gradient(90deg,rgba(184,146,30,.2),transparent)}
 </style>
 </head>
 <body>
@@ -687,9 +688,10 @@ function unlockAnim(oldN,newN,r){const box=$('unlock'),T=ROMANS.length;sfx('unlo
   $('facts').animate([{transform:'scale(1)'},{transform:'scale(1.6)',background:'#7cff8a'},{transform:'scale(1)'}],{duration:650})},3050)}
 function hatch(e,r){const price=PRICE[e.t]*5;
  const isNew=!st.found[r[0]],oldN=foundN();st.found[r[0]]=1;
- show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p>${r[2]}</p><p class="fact">Keep it and it earns you <b>${earnTxt(r[1])}</b>. Or sell it now for $${price}.</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
- if(isNew)unlockAnim(oldN,foundN(),r);
- const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);if(e.tag){removeLabel(e.tag);e.tag=null}baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud()};
+ show(`<img class="pt" src="${portrait(r)}" style="border-color:${CSS[r[1]]};float:right"><h3>You hatched: ${r[0]}</h3><span class="tag" style="background:${CSS[r[1]]}">${RAR[r[1]]}</span><p class="bigfact" style="border-left-color:${CSS[r[1]]}">${r[2]}</p><p class="fact">Keep it and it earns you <b>${earnTxt(r[1])}</b>. Or sell it now for $${price}.</p><div class="acts"><button class="btn" id="keep">Keep</button><button class="btn" id="sell">Sell $${price}</button></div>`);
+ const pend=isNew?{o:oldN,n:foundN(),r}:null;
+ const done=()=>{e.m.rotation.set(0,0,0);scene.remove(e.m);if(e.tag){removeLabel(e.tag);e.tag=null}baseEggs.splice(baseEggs.indexOf(e),1);nearEgg=null;$('open').style.display='none';dlg.close();hud();if(pend)setTimeout(()=>unlockAnim(pend.o,pend.n,pend.r),250)};
+ const lock=['keep','sell'].map(id=>$(id));lock.forEach(b=>b.disabled=true);setTimeout(()=>lock.forEach(b=>b.disabled=false),1000);
  $('keep').onclick=()=>{st.kept.push(r[0]);if(walkers.length<14)addWalker(r[0]);toast(r[0]+' is now earning you $'+fmtR(INCOME[r[1]])+'/s');done()};
  $('sell').onclick=()=>{st.money+=price;toast('Sold for $'+price);done()}}
 
