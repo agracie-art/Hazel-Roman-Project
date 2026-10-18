@@ -224,7 +224,7 @@ h3{margin:0 0 8px;font-size:20px;color:var(--purple)}
 <div id="unlock" popover="manual"></div>
 <div id="adbox"><video id="advid" playsinline webkit-playsinline preload="none"></video><button class="btn" id="adx" aria-label="Close ad">✕</button><div id="adbar"><span class="pill" id="adtxt"></span><span class="pill" id="advip"></span></div></div>
 <div id="hudL"><button class="btn" id="facts">Facts</button><div class="pill" id="speed">Speed 120</div><div class="pill" id="gain"></div><div class="pill" id="eggs">Eggs 50</div><button class="btn" id="snd">♪ On</button></div>
-<div id="hudR"><div id="cashRow"><div class="pill" id="money">$0</div><div class="pill" id="inc"></div></div><button class="btn" id="shop">Shop</button><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH TO EARN</span></button></div>
+<div id="hudR"><div id="cashRow"><div class="pill" id="money">$0</div><div class="pill" id="inc"></div></div><button class="btn" id="shop">Shop</button><button class="btn" id="ad"><span class="ico"></span><span id="adlbl">WATCH AD</span></button></div>
 <div id="zoom"><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button></div>
 <div class="pill" id="toast"></div>
 
@@ -474,7 +474,7 @@ function adTick(){if(!adOpen||adFail)return;
  if(!st.vip&&(st.adSecs||0)>=VIP_AD_SECS){st.vip=1;applyVip();adVipNow=true;sfx('buy');save()}
  adTxt()}
 const money=n=>'$'+Math.floor(n).toLocaleString('en-US'),adPayTxt=()=>'+$'+fmtD(AD_TIERS[0][1])+' per second \u25B2',adPayLong=()=>'+$'+fmtD(AD_TIERS[0][1])+' per second, rising to $'+fmtD(AD_TIERS[AD_TIERS.length-1][1])+'/s';
-function adLabel(){const w=Date.now()<adNext;$('adlbl').innerHTML=w?'Ad in '+Math.ceil((adNext-Date.now())/1000)+'s':'<b>WATCH TO EARN</b><small>'+adPayTxt()+'</small>';$('ad').disabled=w}
+function adLabel(){const w=Date.now()<adNext;$('adlbl').innerHTML=w?'Ad in '+Math.ceil((adNext-Date.now())/1000)+'s':'<b>WATCH AD</b><small>'+adPayTxt()+'</small>';$('ad').disabled=w}
 setInterval(adLabel,500);
 function adStart(egg){egg=(egg&&egg.m)?egg:null;if(adOpen||(!egg&&Date.now()<adNext))return;adMode=egg?'speed':'earn';adEgg=egg;adCut=0;adOpen=true;adFail=adPaid=adVipNow=false;adWatch=adLast=adGiven=adTier=adPopAcc=0;$('adx').style.display=egg?'block':'none';$('adtxt').classList.remove('paid');$('adbox').style.display='block';adv.src='ad.mp4';adTxt();adv.play().catch(()=>{});clearInterval(adTimer);adTimer=setInterval(adTick,100)}
 $('ad').onclick=()=>adStart();
@@ -491,7 +491,7 @@ function lock(){if(screen.orientation&&screen.orientation.lock)screen.orientatio
 // dialogs
 const dlg=$('dlg');
 function show(h){$('dlgBody').innerHTML=h;dlg.showModal()}
-function adBtnHtml(id){const left=Math.ceil((adNext-Date.now())/1000);return left>0?`<button class="btn adbtn" id="${id}" disabled>▶ Ad ready in ${left}s</button>`:`<button class="btn adbtn" id="${id}">▶ WATCH TO EARN <small>${adPayLong()}</small></button>`}
+function adBtnHtml(id){const left=Math.ceil((adNext-Date.now())/1000);return left>0?`<button class="btn adbtn" id="${id}" disabled>▶ Ad ready in ${left}s</button>`:`<button class="btn adbtn" id="${id}">▶ WATCH AD <small>${adPayLong()}</small></button>`}
 function needCash(cost,what,retry){show(`<h3>Not enough cash!</h3><p>${what} costs $${cost}. You have $${st.money}, so you need $${cost-st.money} more.</p><div class="acts">${adBtnHtml('ncad')}</div><div class="acts"><button class="btn" id="ncx">Close</button></div>`);
  $('ncx').onclick=()=>dlg.close();$('ncad').onclick=()=>{dlg.close();pendingBuy=retry;adStart()}}
 function buyBase(){const lv=st.baseLv;if(lv>=CAPS.length-1)return;const c=BASE_COST[lv];if(st.money<c)return needCash(c,'Base upgrade (Level '+(lv+2)+')',buyBase);
